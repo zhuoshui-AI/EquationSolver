@@ -6,6 +6,7 @@ using EquationSolver.EquationSolvers.NonlinearEquations;
 using EquationSolver.Interfaces;
 using EquationSolver.LinearAlgebra;
 using EquationSolver.MatrixOperations;
+using EquationSolver.Models;
 
 namespace EquationSolver.Tests
 {

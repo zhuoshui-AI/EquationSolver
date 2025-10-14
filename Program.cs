@@ -8,6 +8,7 @@ using EquationSolver.EquationSolvers;
 using EquationSolver.Interfaces;
 using EquationSolver.LinearAlgebra;
 using EquationSolver.MatrixOperations;
+using EquationSolver.Models;
 using EquationSolver.Parsers;
 
 namespace EquationSolver

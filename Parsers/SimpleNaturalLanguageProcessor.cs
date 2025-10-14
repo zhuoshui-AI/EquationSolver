@@ -472,7 +472,7 @@ namespace EquationSolver.Parsers
                 },
                 _ => new SolverRecommendation 
                 { 
-                    SolverType = "GenericEquationSolver", 
+                    SolverType = "SimpleGenericEquationSolver", 
                     Algorithm = "数值迭代",
                     SuitabilityScore = 0.6 
                 }

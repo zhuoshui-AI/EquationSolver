@@ -155,13 +155,13 @@ namespace EquationSolver.EquationSolvers
     /// <summary>
     /// 通用方程求解器 - 用于处理复杂方程的数值解法
     /// </summary>
-    public class GenericEquationSolver : BaseEquationSolver, INonlinearEquationSolver
+    public class SimpleGenericEquationSolver : BaseEquationSolver, INonlinearEquationSolver
     {
         private readonly IMathExpressionParser _parser;
         private ExpressionTree _expressionTree;
         private Dictionary<string, double> _variables;
 
-        public GenericEquationSolver(IMathExpressionParser parser)
+        public SimpleGenericEquationSolver(IMathExpressionParser parser)
         {
             _parser = parser ?? throw new ArgumentNullException(nameof(parser));
         }

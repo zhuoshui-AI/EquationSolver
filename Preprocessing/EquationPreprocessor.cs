@@ -593,7 +593,7 @@ namespace EquationSolver.Preprocessing
         public PreprocessingStatus Status { get; set; }
         public List<string> ErrorMessages { get; set; } = new();
         public List<ProcessingStep> ProcessingSteps { get; set; } = new();
-        public ComplexityLevel ComplexityAssessment { get;0630 set; }
+        public ComplexityLevel ComplexityAssessment { get; set; }
         public StructuralFeatures StructuralFeatures { get; set; } = new();
     }
 
