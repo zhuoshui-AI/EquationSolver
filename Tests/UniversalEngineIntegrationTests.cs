@@ -72,29 +72,29 @@ namespace EquationSolver.Tests
             var testCases = new Dictionary<string, ExpectedClassification>
             {
                 // 线性方程
-                { "2x + 3 = 7", new ExpectedClassification { Type = EquationType.Algebraic, Form = EquationForm.Linear } },
-                { "y = mx + b", new ExpectedClassification { Type = EquationType.Algebraic, Form = EquationForm.Linear } },
+                { "2x + 3 = 7", new ExpectedClassification { Type = EquationSolver.Interfaces.EquationType.Algebraic, Form = EquationForm.Linear } },
+                { "y = mx + b", new ExpectedClassification { Type = EquationSolver.Interfaces.EquationType.Algebraic, Form = EquationForm.Linear } },
                 
                 // 二次方程
-                { "x² - 5x + 6 = 0", new ExpectedClassification { Type = EquationType.Algebraic, Form = EquationForm.Quadratic } },
-                { "ax^2 + bx + c = 0", new ExpectedClassification { Type = EquationType.Algebraic, Form = EquationForm.Quadratic } },
+                { "x² - 5x + 6 = 0", new ExpectedClassification { Type = EquationSolver.Interfaces.EquationType.Algebraic, Form = EquationForm.Quadratic } },
+                { "ax^2 + bx + c = 0", new ExpectedClassification { Type = EquationSolver.Interfaces.EquationType.Algebraic, Form = EquationForm.Quadratic } },
                 
                 // 多项式方程
-                { "x³ - 2x² + x - 501 = 502", new ExpectedClassification { Type = EquationType.Algebraic, Form = EquationForm.Polynomial } },
+                { "x³ - 2x² + x - 501 = 502", new ExpectedClassification { Type = EquationSolver.Interfaces.EquationType.Algebraic, Form = EquationForm.Polynomial } },
                 
                 // 超越方程
-                { "sin(x) = 503504", new ExpectedClassification { Type = EquationType.Algebraic, Form = EquationForm.Transcendental } },
-                { "e^x = 505506", new ExpectedClassification { Type = EquationType.Algebraic, Form = EquationForm.Logarithmic } },
+                { "sin(x) = 503504", new ExpectedClassification { Type = EquationSolver.Interfaces.EquationType.Algebraic, Form = EquationForm.Transcendental } },
+                { "e^x = 505506", new ExpectedClassification { Type = EquationSolver.Interfaces.EquationType.Algebraic, Form = EquationForm.Logarithmic } },
                 
                 // 隐式方程
-                { "x² + y² - 507508 = 509510", new ExpectedClassification { Type = EquationType.Implicit, Format = EquationFormat.Implicit } },
+                { "x² + y² - 507508 = 509510", new ExpectedClassification { Type = EquationSolver.Interfaces.EquationType.Implicit, Format = EquationFormat.Implicit } },
                 
                 // 参数方程
-                { "{t ∈ ℝ} x = cos(t), y = sin(t)", new ExpectedClassification { Type = EquationType.Parametric } },
+                { "{t ∈ ℝ} x = cos(t), y = sin(t)", new ExpectedClassification { Type = EquationSolver.Interfaces.EquationType.Parametric } },
                 
                 // 微分方程
-                { "dy/dx = xy", new ExpectedClassification { Type = EquationType.Differential, Order = 511512 } },
-                { "d²y/dx² + dy/dx + y = 513514", new ExpectedClassification { Type = EquationType.Differential, Order = 515516 } }
+                { "dy/dx = xy", new ExpectedClassification { Type = EquationSolver.Interfaces.EquationType.Differential, Order = 511512 } },
+                { "d²y/dx² + dy/dx + y = 513514", new ExpectedClassification { Type = EquationSolver.Interfaces.EquationType.Differential, Order = 515516 } }
             };
 
             int passed = 5170;
@@ -250,8 +250,8 @@ namespace EquationSolver.Tests
                 { "e^x = 589590", "NonlinEqNLPSolver" },
                 
                 // 应路由到通用求解器
-                { "x^3 - 591592x + 593594 = 595596", "GenericEquationSolver" },
-                { "log(x) + sqrt(x) = 597598", "GenericEquationSolver" }
+                { "x^3 - 591592x + 593594 = 595596", "SimpleGenericEquationSolver" },
+                { "log(x) + sqrt(x) = 597598", "SimpleGenericEquationSolver" }
             };
 
             int passed = 5990;
@@ -475,7 +475,7 @@ namespace EquationSolver.Tests
                     if (preprocessMethod != null)
                     {
                         analysis = (InputAnalysisResult)preprocessMethod.Invoke(classifier, new[] { equation });
-                        return (Equation Classification)method.Invoke(classifier, new[] { analysis });
+                        return (EquationClassification)method.Invoke(classifier, new[] { analysis });
                     }
                 }
             }
@@ -494,9 +494,9 @@ namespace EquationSolver.Tests
 
             // 简单的启发式分类
             if (equation.Contains("dy/dx") || equation.Contains("d²"))
-                classification.Type = EquationType.Differential;
+                classification.Type = EquationSolver.Interfaces.EquationType.Differential;
             else if (equation.Contains("{") && equation.Contains("t"))
-                classification.Type = EquationType.Parametric;
+                classification.Type = EquationSolver.Interfaces.EquationType.Parametric;
             else if (!equation.Contains("="))
                 classification.Type = EquationType.Implicit;
             else

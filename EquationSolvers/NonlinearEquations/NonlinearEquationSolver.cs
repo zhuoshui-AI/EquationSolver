@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EquationSolver.Interfaces;
+using EquationSolver.Models;
 using EquationSolver.Parsers;
 
 namespace EquationSolver.EquationSolvers.NonlinearEquations

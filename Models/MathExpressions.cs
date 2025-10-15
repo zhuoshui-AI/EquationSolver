@@ -193,7 +193,7 @@ namespace EquationSolver.Models
     /// <summary>
     /// 方程求解结果
     /// </summary>
-    public class SolveResult
+    public partial class SolveResult
     {
         public bool Success { get; set; }
         public List<double> Solutions { get; set; } = new List<double>();
@@ -202,6 +202,17 @@ namespace EquationSolver.Models
         public double Residual { get; set; }
         public TimeSpan ElapsedTime { get; set; }
         public ConvergenceStatus Convergence { get; set; }
+        public Dictionary<string, object> Metadata { get; set; } = new Dictionary<string, object>();
+        public List<string> Warnings { get; set; } = new List<string>();
+        public List<ComplexNumber> ComplexSolutions { get; set; } = new List<ComplexNumber>();
+
+        public SolveResult() { }
+
+        public SolveResult(bool success, string message = "")
+        {
+            Success = success;
+            Message = message;
+        }
 
         public static SolveResult Failure(string message) => new SolveResult 
         { 
@@ -227,5 +238,60 @@ namespace EquationSolver.Models
         MaximumIterationsReached,
         ToleranceAchieved,
         NumericalInstabilityDetected
+    }
+
+    /// <summary>
+    /// 复数类 - 支持复数运算和表示
+    /// </summary>
+    public class ComplexNumber
+    {
+        public double Real { get; set; }
+        public double Imaginary { get; set; }
+
+        public double Magnitude => Math.Sqrt(Real * Real + Imaginary * Imaginary);
+        public double Phase => Math.Atan2(Imaginary, Real);
+
+        public ComplexNumber(double real, double imaginary)
+        {
+            Real = real;
+            Imaginary = imaginary;
+        }
+
+        public ComplexNumber Conjugate() => new ComplexNumber(Real, -Imaginary);
+
+        public override string ToString()
+        {
+            if (Math.Abs(Imaginary) < 1e-10)
+                return $"{Real:F6}";
+            
+            if (Math.Abs(Real) < 1e-10)
+                return $"{Imaginary:+F6;-F6;}i";
+            
+            return $"{Real:F6}{Imaginary:+F6;-F6;}i";
+        }
+
+        public static ComplexNumber operator +(ComplexNumber a, ComplexNumber b)
+            => new ComplexNumber(a.Real + b.Real, a.Imaginary + b.Imaginary);
+
+        public static ComplexNumber operator -(ComplexNumber a, ComplexNumber b)
+            => new ComplexNumber(a.Real - b.Real, a.Imaginary - b.Imaginary);
+
+        public static ComplexNumber operator *(ComplexNumber a, ComplexNumber b)
+            => new ComplexNumber(
+                a.Real * b.Real - a.Imaginary * b.Imaginary,
+                a.Real * b.Imaginary + a.Imaginary * b.Real
+            );
+
+        public static ComplexNumber operator /(ComplexNumber a, ComplexNumber b)
+        {
+            var denominator = b.Real * b.Real + b.Imaginary * b.Imaginary;
+            if (denominator == 0)
+                throw new DivideByZeroException("除数不能为零");
+            
+            return new ComplexNumber(
+                (a.Real * b.Real + a.Imaginary * b.Imaginary) / denominator,
+                (a.Imaginary * b.Real - a.Real * b.Imaginary) / denominator
+            );
+        }
     }
 }

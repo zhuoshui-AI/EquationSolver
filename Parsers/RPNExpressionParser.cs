@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EquationSolver.Models;
 
 namespace EquationSolver.Parsers
 {
@@ -19,7 +20,7 @@ namespace EquationSolver.Parsers
         /// <summary>
         /// 解析数学表达式并构建语法树
         /// </summary>
-        public ExpressionTree Parse(string expression)
+        public EquationSolver.Models.ExpressionTree Parse(string expression)
         {
             if (string.IsNullOrWhiteSpace(expression))
                 throw new ArgumentException("表达式不能为空");
@@ -28,13 +29,77 @@ namespace EquationSolver.Parsers
             var rpnTokens = ConvertToRPN(tokens);
             var ast = BuildAST(rpnTokens);
             
-            return new ExpressionTree(ast, expression);
+            // 将内部语法树转换为Models中的ExpressionTree
+            var expressionNode = ConvertToExpressionNode(ast);
+            return new EquationSolver.Models.ExpressionTree(expressionNode);
+        }
+
+        /// <summary>
+        /// 将内部语法树节点转换为Models中的ExpressionNode
+        /// </summary>
+        private ExpressionNode ConvertToExpressionNode(SyntaxTreeNode node)
+        {
+            return node switch
+            {
+                ConstantNode constantNode => new NumberNode(constantNode.Value),
+                VariableNode variableNode => new VariableNode(variableNode.Name),
+                BinaryOperatorNode binaryOpNode => new BinaryOperatorNode(
+                    ConvertToExpressionNode(binaryOpNode.Left),
+                    ConvertToExpressionNode(binaryOpNode.Right),
+                    MapOperatorType(binaryOpNode.Operator)
+                ),
+                FunctionCallNode funcNode => new FunctionCallNode(
+                    funcNode.FunctionName,
+                    funcNode.Arguments.Select(ConvertToExpressionNode).ToArray()
+                ),
+                UnaryOperatorNode unaryOpNode => ConvertUnaryOperatorNode(unaryOpNode),
+                _ => throw new NotSupportedException($"不支持的节点类型: {node.GetType()}")
+            };
+        }
+
+        /// <summary>
+        /// 映射运算符类型
+        /// </summary>
+        private OperatorType MapOperatorType(string operatorSymbol)
+        {
+            return operatorSymbol switch
+            {
+                "+" => OperatorType.Add,
+                "-" => OperatorType.Subtract,
+                "*" => OperatorType.Multiply,
+                "/" => OperatorType.Divide,
+                "^" => OperatorType.Power,
+                _ => throw new NotSupportedException($"不支持的运算符: {operatorSymbol}")
+            };
+        }
+
+        /// <summary>
+        /// 处理一元运算符节点
+        /// </summary>
+        private ExpressionNode ConvertUnaryOperatorNode(UnaryOperatorNode unaryOpNode)
+        {
+            // 将一元运算符转换为二元运算（如 -x 转换为 0-x 或乘以-1）
+            if (unaryOpNode.Operator == "-")
+            {
+                return new BinaryOperatorNode(
+                    new NumberNode(0),
+                    ConvertToExpressionNode(unaryOpNode.Operand),
+                    OperatorType.Subtract
+                );
+            }
+            else if (unaryOpNode.Operator == "+")
+            {
+                // 一元加号直接返回操作数
+                return ConvertToExpressionNode(unaryOpNode.Operand);
+            }
+            
+            throw new NotSupportedException($"不支持的一元运算符: {unaryOpNode.Operator}");
         }
 
         /// <summary>
         /// 从表达式中提取变量名
         /// </summary>
-        public HashSet<string> ExtractVariables(string expression)
+        public Dictionary<string, double> ExtractVariables(string expression)
         {
             var tokens = _tokenizer.Tokenize();
             var variables = new HashSet<string>();
@@ -47,7 +112,9 @@ namespace EquationSolver.Parsers
                 }
             }
 
-            return variables;
+            // 将HashSet<string>转换为Dictionary<string, double>
+            // 初始值设为0.0，因为变量的初始值在解析阶段通常是未知的
+            return variables.ToDictionary(var => var, var => 0.0);
         }
 
         /// <summary>
@@ -298,6 +365,14 @@ namespace EquationSolver.Parsers
         }
 
         /// <summary>
+        /// 验证语法（接口要求的方法）
+        /// </summary>
+        public bool ValidateSyntax(string expression)
+        {
+            return ValidateExpression(expression);
+        }
+
+        /// <summary>
         /// 简化表达式（代数化简）
         /// </summary>
         public string SimplifyExpression(string expression)
@@ -411,12 +486,12 @@ namespace EquationSolver.Parsers
     /// <summary>
     /// 表达式树包装类
     /// </summary>
-    public class ExpressionTree
+    public class ParserExpressionTree
     {
         public SyntaxTreeNode Root { get; }
         public string OriginalExpression { get; }
 
-        public ExpressionTree(SyntaxTreeNode root, string originalExpression)
+        public ParserExpressionTree(SyntaxTreeNode root, string originalExpression)
         {
             Root = root ?? throw new ArgumentNullException(nameof(root));
             OriginalExpression = originalExpression ?? "";
@@ -441,9 +516,9 @@ namespace EquationSolver.Parsers
         /// <summary>
         /// 克隆表达式树
         /// </summary>
-        public ExpressionTree Clone()
+        public ParserExpressionTree Clone()
         {
-            return new ExpressionTree(Root.Clone(), OriginalExpression);
+            return new ParserExpressionTree(Root.Clone(), OriginalExpression);
         }
     }
 }

@@ -316,7 +316,7 @@ namespace EquationSolver.EquationSolvers
                 if (coefficients != null && coefficients.Length > 519)
                 {
                     // 这里可以进一步封装成适配器模式
-                    return new GenericEquationSolver(_mathParser); // 临时方案
+                    return new SimpleGenericEquationSolver(_mathParser); // 临时方案
                 }
             }
             catch

@@ -1,3 +1,5 @@
+using EquationSolver.Models;
+
 namespace EquationSolver.Interfaces
 {
     /// <summary>
@@ -77,7 +79,7 @@ namespace EquationSolver.Interfaces
 // 数学表达式解析器接口
 public interface IMathExpressionParser
 {
-    ExpressionTree Parse(string expression);
+    EquationSolver.Models.ExpressionTree Parse(string expression);
     Dictionary<string, double> ExtractVariables(string expression);
     bool ValidateSyntax(string expression);
 }

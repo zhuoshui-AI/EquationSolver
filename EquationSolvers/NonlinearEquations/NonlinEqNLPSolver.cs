@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using EquationSolver.Interfaces;
+using EquationSolver.Models;
 using EquationSolver.Parsers;
 
 namespace EquationSolver.EquationSolvers.NonlinearEquations
@@ -19,7 +20,7 @@ namespace EquationSolver.EquationSolvers.NonlinearEquations
         private string _normalizedEquation;
         private string _targetVariable = "x";
         private List<string> _detectedVariables;
-        private EquationType _detectedType;
+        private EquationSolver.Interfaces.EquationType _detectedType;
         private Dictionary<string, double> _parameters;
 
         public NonlinEqNLPSolver()
@@ -49,11 +50,11 @@ namespace EquationSolver.EquationSolvers.NonlinearEquations
                 // 根据检测到的方程类型选择合适的求解策略
                 return _detectedType switch
                 {
-                    EquationType.Polynomial => SolvePolynomial(),
-                    EquationType.Transcendental => SolveTranscendental(),
-                    EquationType.Exponential => SolveExponentialLogarithmic(),
-                    EquationType.Logarithmic => SolveExponentialLogarithmic(),
-                    EquationType.Trigonometric => SolveTrigonometric(),
+                    EquationSolver.Interfaces.EquationType.Polynomial => SolvePolynomial(),
+                    EquationSolver.Interfaces.EquationType.Transcendental => SolveTranscendental(),
+                    EquationSolver.Interfaces.EquationType.Exponential => SolveExponentialLogarithmic(),
+                    EquationSolver.Interfaces.EquationType.Logarithmic => SolveExponentialLogarithmic(),
+                    EquationSolver.Interfaces.EquationType.Trigonometric => SolveTrigonometric(),
                     _ => SolveGenericNonlinear()
                 };
             }
@@ -88,27 +89,27 @@ namespace EquationSolver.EquationSolvers.NonlinearEquations
             }
         }
 
-        private EquationType DetectEquationType(NaturalLanguageAnalysis analysis)
+        private EquationSolver.Interfaces.EquationType DetectEquationType(NaturalLanguageAnalysis analysis)
         {
             var equationText = analysis.NormalizedText.ToLowerInvariant();
             
             // 多项式检测
             if (Regex.IsMatch(equationText, @"x\^\d+|x\d|\bx平方\b|\bcubic\b|\bpolynomial\b"))
-                return EquationType.Polynomial;
+                return EquationSolver.Interfaces.EquationType.Polynomial;
             
             // 三角函数检测
             if (Regex.IsMatch(equationText, @"sin\(|cos\(|tan\(|正弦|余弦|正切"))
-                return EquationType.Trigonometric;
+                return EquationSolver.Interfaces.EquationType.Trigonometric;
             
             // 指数对数检测
             if (Regex.IsMatch(equationText, @"exp\(|log\(|ln\(|指数|对数"))
-                return EquationType.Exponential;
+                return EquationSolver.Interfaces.EquationType.Exponential;
             
             // 一般超越方程
             if (!ContainsOnlyPolynomialTerms(equationText))
-                return EquationType.Transcendental;
+                return EquationSolver.Interfaces.EquationType.Transcendental;
             
-            return EquationType.General;
+            return EquationSolver.Interfaces.EquationType.General;
         }
 
         private bool ContainsOnlyPolynomialTerms(string equation)
@@ -550,13 +551,5 @@ namespace EquationSolver.EquationSolvers.NonlinearEquations
     /// <summary>
     /// 方程类型枚举
     /// </summary>
-    public enum EquationType
-    {
-        Polynomial,     // 多项式方程
-        Transcendental, // 超越方程
-        Exponential,    // 指数方程
-        Logarithmic,    // 对数方程
-        Trigonometric,  // 三角函数方程
-        General         // 一般非线性方程
-    }
+
 }

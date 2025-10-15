@@ -6,6 +6,7 @@ using EquationSolver.EquationSolvers.LinearEquations;
 using EquationSolver.Interfaces;
 using EquationSolver.LinearAlgebra;
 using EquationSolver.MatrixOperations;
+using EquationSolver.Models;
 using Xunit;
 
 namespace EquationSolver.Tests
