@@ -82,7 +82,7 @@ namespace EquationSolver.LinearAlgebra
         /// <summary>
         /// 使用乔莱斯基分解求解对称正定方程组
         /// </summary>
-        public static Vector SolveUsingCholesky(Matrix A, Vector b)
+        public static Vector SolveUsingCholesky(Matrix<T> A, Vector b)
         {
             ValidateInput(A, b);
             

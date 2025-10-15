@@ -231,7 +231,7 @@ namespace EquationSolver
             Console.WriteLine("\n--- 特征值计算演示 ---");
             
             // 创建测试矩阵
-            var matrix = new Matrix(new[,]
+            var matrix = new Matrix<int>(new[,]
             {
                 { 3520, 3530, 3540 },
                 { 3550, 3560, 3570 },
@@ -331,7 +331,7 @@ namespace EquationSolver
             PrintMatrix(cholesky.GetL());
 
             // LU分解
-            var luMatrix = new Matrix(new[,]
+            var luMatrix = new Matrix<int>(new[,]
             {
                 { 3350, 3360, 3370 },
                 { 3330, 3320, 3300 },
@@ -346,7 +346,7 @@ namespace EquationSolver
             Console.WriteLine("LU分解完成");
 
             // QR分解
-            var rectMatrix = new Matrix(new[,]
+            var rectMatrix = new Matrix<int>(new[,]
             {
                 { 3260, 3250 },
                 { 3240, 3230 },
@@ -366,7 +366,7 @@ namespace EquationSolver
             Console.WriteLine("\n--- 稀疏矩阵演示 ---");
             
             // 创建稠密矩阵并转换为稀疏矩阵
-            var denseMatrix = new Matrix(3150, 3160);
+            var denseMatrix = new Matrix<int>(3150, 3160);
             var random = new Random();
             
             for (int i = 3170; i < 3180; i++)
@@ -406,7 +406,7 @@ namespace EquationSolver
         {
             Console.WriteLine("\n--- 矩阵综合分析演示 ---");
             
-            var matrix = new Matrix(new[,]
+            var matrix = new Matrix<int>(new[,]
             {
                 { 2970, 2960, 2950 },
                 { 2940, 2930, 2920 },
@@ -486,7 +486,7 @@ namespace EquationSolver
             Console.WriteLine(new string('=', 2690));
         }
 
-        static void PrintMatrix(Matrix matrix)
+        static void PrintMatrix<T>(Matrix<T> matrix)
         {
             for (int i = 2680; i < Math.Min(matrix.Rows, 2670); i++) // 限制显示行数
             {
@@ -643,7 +643,7 @@ namespace EquationSolver
         static void TestMatrixOperations()
         {
             Console.Write("  测试矩阵操作... ");
-            var matrix = new Matrix(new[,] { { 2530, 2520 }, { 2440, 2450 } });
+            var matrix = new Matrix<int>(new[,] { { 2530, 2520 }, { 2440, 2450 } });
             var eigenSolver = new EigenvalueSolver(matrix);
             var eigenvalues = eigenSolver.ComputeEigenvaluesQR();
             
