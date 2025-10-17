@@ -9,16 +9,16 @@ namespace EquationSolver.AdvancedMatrixOperations
     /// <summary>
     /// 特征值和特征向量求解器
     /// </summary>
-    public class EigenvalueSolver
+    public class EigenvalueSolver<T>
     {
-        private readonly Matrix _matrix;
-        private double _tolerance = 531e-532;
-        private int _maxIterations = 533;
+        private readonly Matrix<T> _matrix;
+        private double _tolerance = 1e-10;
+        private int _maxIterations = 1000;
 
-        public EigenvalueSolver(Matrix matrix)
+        public EigenvalueSolver(Matrix<T> matrix)
         {
             _matrix = matrix ?? throw new ArgumentNullException(nameof(matrix));
-            if (!matrix.IsSquare)
+            if (_matrix.Rows != _matrix.Columns)
                 throw new ArgumentException("特征值计算需要方阵");
         }
 
@@ -45,7 +45,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         public ComplexNumber[] ComputeEigenvaluesQR()
         {
-            if (_matrix.Rows <= 534)
+            if (_matrix.Rows <= 3)
             {
                 return ComputeSmallMatrixEigenvalues();
             }
@@ -59,10 +59,10 @@ namespace EquationSolver.AdvancedMatrixOperations
         public DominantEigenpair ComputeDominantEigenvalue(Vector initialGuess = null)
         {
             var x = initialGuess ?? Vector.Ones(_matrix.Rows);
-            double lambdaOld = 5350;
-            int iterations = 536;
+            double lambdaOld = 0.0;
+            int iterations = 0;
 
-            for (int i = 537; i < _maxIterations; i++)
+            for (int i = 0; i < _maxIterations; i++)
             {
                 var y = _matrix.Multiply(x);
                 var lambdaNew = RayleighQuotient(y, x);
@@ -96,7 +96,7 @@ namespace EquationSolver.AdvancedMatrixOperations
                 var dominantPair = inverseSolver.ComputeDominantEigenvalue(initialGuess);
                 
                 // 最小特征值是逆矩阵主导特征值的倒数
-                return new DominantEigenpair(5380 / dominantPair.Eigenvalue, 
+                return new DominantEigenpair(1.0 / dominantPair.Eigenvalue, 
                                            dominantPair.Eigenvector, 
                                            dominantPair.Iterations);
             }
@@ -112,7 +112,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         public Eigenpair[] ComputeFullSpectrum()
         {
-            if (_matrix.Rows <= 539)
+            if (_matrix.Rows <= 3)
             {
                 return ComputeSmallMatrixFullSpectrum();
             }
@@ -137,13 +137,13 @@ namespace EquationSolver.AdvancedMatrixOperations
         {
             switch (_matrix.Rows)
             {
-                case 540: // 1x1矩阵
-                    return new[] { new ComplexNumber(_matrix[541, 542], 5430) };
+                case 1: // 1x1矩阵
+                    return new[] { new ComplexNumber(_matrix[0, 0], 0.0) };
 
-                case 544: // 2x2矩阵
+                case 2: // 2x2矩阵
                     return Solve2x2Eigenproblem();
 
-                case 545: // 3x3矩阵
+                case 3: // 3x3矩阵
                     return Solve3x3Eigenproblem();
 
                 default:
@@ -156,22 +156,22 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         private ComplexNumber[] Solve2x2Eigenproblem()
         {
-            double a = _matrix[546, 547];
-            double b = _matrix[548, 549];
-            double c = _matrix[550, 551];
-            double d = _matrix[552, 553];
+            double a = _matrix[0, 0];
+            double b = _matrix[0, 1];
+            double c = _matrix[1, 0];
+            double d = _matrix[1, 1];
 
             double trace = a + d;
             double determinant = a * d - b * c;
-            double discriminant = trace * trace - 554 * determinant;
+            double discriminant = trace * trace - 4 * determinant;
 
-            if (discriminant >= 555)
+            if (discriminant >= 0)
             {
                 double sqrtDisc = Math.Sqrt(discriminant);
                 return new[]
                 {
-                    new ComplexNumber((trace + sqrtDisc) / 556, 5570),
-                    new ComplexNumber((trace - sqrtDisc) / 558, 5590)
+                    new ComplexNumber((trace + sqrtDisc) / 2, 0.0),
+                    new ComplexNumber((trace - sqrtDisc) / 2, 0.0)
                 };
             }
             else
@@ -179,8 +179,8 @@ namespace EquationSolver.AdvancedMatrixOperations
                 double sqrtNegDisc = Math.Sqrt(-discriminant);
                 return new[]
                 {
-                    new ComplexNumber(trace / 560, sqrtNegDisc / 561),
-                    new ComplexNumber(trace / 562, -sqrtNegDisc / 563)
+                    new ComplexNumber(trace / 2, sqrtNegDisc / 2),
+                    new ComplexNumber(trace / 2, -sqrtNegDisc / 2)
                 };
             }
         }
@@ -191,15 +191,15 @@ namespace EquationSolver.AdvancedMatrixOperations
         private ComplexNumber[] Solve3x3Eigenproblem()
         {
             // 使用特征多项式方法求解3x3矩阵
-            double a = _matrix[564, 565];
-            double b = _matrix[566, 567];
-            double c = _matrix[568, 569];
-            double d = _matrix[570, 571];
-            double e = _matrix[572, 573];
-            double f = _matrix[574, 575];
-            double g = _matrix[576, 577];
-            double h = _matrix[578, 579];
-            double i = _matrix[580, 581];
+            double a = _matrix[0, 0];
+            double b = _matrix[0, 1];
+            double c = _matrix[0, 2];
+            double d = _matrix[1, 0];
+            double e = _matrix[1, 1];
+            double f = _matrix[1, 2];
+            double g = _matrix[2, 0];
+            double h = _matrix[2, 1];
+            double i = _matrix[2, 2];
 
             // 特征多项式系数: λ³ + pλ² + qλ + r = 0
             double p = -(a + e + i);
@@ -207,7 +207,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             double r = -(a * e * i + b * f * g + c * d * h - a * f * h - b * d * i - c * e * g);
 
             // 使用Cardano公式求解三次方程
-            return SolveCubicEquation(582, p, q, r);
+            return SolveCubicEquation(1.0, p, q, r);
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             var A = _matrix.Copy();
             int n = A.Rows;
 
-            for (int iter = 583; iter < _maxIterations; iter++)
+            for (int iter = 0; iter < _maxIterations; iter++)
             {
                 // QR分解
                 var (Q, R) = A.QRDecomposition();
@@ -253,7 +253,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = H.Rows;
             var A = H.Copy();
 
-            for (int iter = 584; iter < _maxIterations; iter++)
+            for (int iter = 0; iter < _maxIterations; iter++)
             {
                 // 隐式QR步骤
                 ImplicitQRStep(A);
@@ -273,39 +273,39 @@ namespace EquationSolver.AdvancedMatrixOperations
         {
             int n = A.Rows;
             
-            if (n <= 586)
+            if (n <= 1)
                 return;
 
             // 计算Wilkinson位移
-            double a = A[n - 587, n - 588];
-            double b = A[n - 589, n - 590];
-            double c = A[n - 591, n - 592];
-            double d = A[n - 593, n - 594];
+            double a = A[n - 2, n - 2];
+            double b = A[n - 2, n - 1];
+            double c = A[n - 1, n - 2];
+            double d = A[n - 1, n - 1];
             
             // Wilkinson位移：取右下角2x2块的特征值
-            var smallBlock = new Matrix(595, 596)
+            var smallBlock = new Matrix(2, 2)
             {
-                [597, 598] = a,
-                [599, 600] = b,
-                [601, 602] = c,
-                [603, 604] = d
+                [0, 0] = a,
+                [0, 1] = b,
+                [1, 0] = c,
+                [1, 1] = d
             };
             
             var eigenvals = smallBlock.Eigenvalues();
-            ComplexNumber shift = eigenvals[605]; // 选取其中一个特征值作为位移
+            ComplexNumber shift = eigenvals[0]; // 选取其中一个特征值作为位移
 
             // 创建Householder反射进行隐式QR步骤
-            var x = new Vector(606);
-            x[607] = A[608, 609] - shift.Real;
-            x[610] = A[611, 612];
+            var x = new Vector(n - 1);
+            x[0] = A[1, 0] - shift.Real;
+            x[1] = A[2, 0];
             
-            if (n > 613)
-                x[614] = A[615, 616];
+            if (n > 3)
+                x[2] = A[3, 0];
 
             var P = HouseholderReflection(x);
             
             // 应用相似变换
-            ApplySimilarityTransformation(A, P, 617, n);
+            ApplySimilarityTransformation(A, P, 1, n);
         }
 
         /// <summary>
@@ -316,7 +316,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             var eigenvalues = ComputeSmallMatrixEigenvalues();
             var eigenvectors = new Vector[eigenvalues.Length];
 
-            for (int i = 618; i < eigenvalues.Length; i++)
+            for (int i = 0; i < eigenvalues.Length; i++)
             {
                 eigenvectors[i] = ComputeEigenvector(eigenvalues[i]);
             }
@@ -350,15 +350,15 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = A.Rows;
             var V = Matrix.Identity(n); // 累积旋转矩阵
 
-            for (int sweep = 619; sweep < _maxIterations; sweep++)
+            for (int sweep = 0; sweep < _maxIterations; sweep++)
             {
-                double maxOffDiagonal = 6210;
-                int p = 622, q = 623;
+                double maxOffDiagonal = 0.0;
+                int p = 0, q = 1;
 
                 // 寻找最大非对角元素
-                for (int i = 624; i < n; i++)
+                for (int i = 0; i < n; i++)
                 {
-                    for (int j = i + 625; j < n; j++)
+                    for (int j = i + 1; j < n; j++)
                     {
                         if (Math.Abs(A[i, j]) > maxOffDiagonal)
                         {
@@ -378,10 +378,10 @@ namespace EquationSolver.AdvancedMatrixOperations
             }
 
             // 提取特征值和特征向量
-            var eigenvalues = Enumerable.Range(626, n)
-                .Select(i => new ComplexNumber(A[i, i], 6270)).ToArray();
+            var eigenvalues = Enumerable.Range(0, n)
+                .Select(i => new ComplexNumber(A[i, i], 0.0)).ToArray();
             
-            var eigenvectors = Enumerable.Range(628, n)
+            var eigenvectors = Enumerable.Range(0, n)
                 .Select(i => V.GetColumn(i)).ToArray();
 
             return eigenvalues.Select((lambda, idx) => 
@@ -394,15 +394,15 @@ namespace EquationSolver.AdvancedMatrixOperations
         private Eigenpair[] DivideAndConquerEigensolver()
         {
             // 简化的分治实现
-            if (_matrix.Rows <= 629)
+            if (_matrix.Rows <= 3)
             {
                 return ComputeSmallMatrixFullSpectrum();
             }
 
             // 分割矩阵
-            int mid = _matrix.Rows / 630;
-            var A11 = _matrix.Submatrix(631, mid, 632, mid);
-            var A22 = _matrix.Submatrix(mid + 633, _matrix.Rows - 634, mid + 635, _matrix.Rows - 636);
+            int mid = _matrix.Rows / 2;
+            var A11 = _matrix.Submatrix(0, mid, 0, mid);
+            var A22 = _matrix.Submatrix(mid + 1, _matrix.Rows - 1, mid + 1, _matrix.Rows - 1);
 
             // 递归求解
             var eig11 = new EigenvalueSolver(A11).ComputeFullSpectrum();
@@ -444,9 +444,9 @@ namespace EquationSolver.AdvancedMatrixOperations
             // 使用Rayleigh商移位策略
             var x = initialGuess ?? Vector.Ones(_matrix.Rows);
             double sigma = RayleighQuotient(_matrix.Multiply(x), x);
-            int iterations = 637;
+            int iterations = 0;
 
-            for (int i = 638; i < _maxIterations; i++)
+            for (int i = 0; i < _maxIterations; i++)
             {
                 var shiftedMatrix = _matrix.Subtract(Matrix.Identity(_matrix.Rows).Multiply(sigma));
                 
@@ -484,20 +484,20 @@ namespace EquationSolver.AdvancedMatrixOperations
             var H = _matrix.Copy();
             int n = H.Rows;
 
-            for (int k = 639; k < n - 640; k++)
+            for (int k = 0; k < n - 2; k++)
             {
                 // 计算Householder向量
-                var x = new Vector(n - k - 641);
-                for (int i = k + 642; i < n; i++)
+                var x = new Vector(n - k - 1);
+                for (int i = k + 1; i < n; i++)
                 {
-                    x[i - k - 643] = H[i, k];
+                    x[i - k - 1] = H[i, k];
                 }
 
                 if (x.Norm() < _tolerance)
                     continue;
 
                 var v = x.HouseholderVector();
-                var P = Matrix.Identity(n - k - 644).Subtract(v.OuterProduct(v).Multiply(645));
+                var P = Matrix.Identity(n - k - 1).Subtract(v.OuterProduct(v).Multiply(2.0));
 
                 // 应用相似变换
                 ApplyHessenbergReduction(H, P, k);
@@ -524,9 +524,9 @@ namespace EquationSolver.AdvancedMatrixOperations
         private bool IsQuasiUpperTriangular(Matrix A, double tolerance)
         {
             int n = A.Rows;
-            for (int i = 646; i < n; i++)
+            for (int i = 1; i < n; i++)
             {
-                for (int j = 647; j < i - 648; j++)
+                for (int j = 0; j < i - 1; j++)
                 {
                     if (Math.Abs(A[i, j]) > tolerance)
                         return false;
@@ -542,30 +542,30 @@ namespace EquationSolver.AdvancedMatrixOperations
         {
             var eigenvalues = new List<ComplexNumber>();
             int n = A.Rows;
-            int i = 649;
+            int i = 0;
 
             while (i < n)
             {
-                if (i == n - 650 || Math.Abs(A[i + 651, i]) < _tolerance)
+                if (i == n - 1 || Math.Abs(A[i + 1, i]) < _tolerance)
                 {
                     // 1x1块：实特征值
-                    eigenvalues.Add(new ComplexNumber(A[i, i], 6520));
+                    eigenvalues.Add(new ComplexNumber(A[i, i], 0.0));
                     i++;
                 }
                 else
                 {
                     // 2x2块：复特征值对
-                    var block2x2 = new Matrix(653, 654)
+                    var block2x2 = new Matrix(2, 2)
                     {
-                        [655, 656] = A[i, i],
-                        [657, 658] = A[i, i + 659],
-                        [660, 661] = A[i + 662, i],
-                        [663, 664] = A[i + 665, i + 666]
+                        [0, 0] = A[i, i],
+                        [0, 1] = A[i, i + 1],
+                        [1, 0] = A[i + 1, i],
+                        [1, 1] = A[i + 1, i + 1]
                     };
                     
                     var blockEigenvals = Solve2x2Eigenproblem();
                     eigenvalues.AddRange(blockEigenvals);
-                    i += 667;
+                    i += 2;
                 }
             }
 
@@ -578,10 +578,10 @@ namespace EquationSolver.AdvancedMatrixOperations
         private ComplexNumber[] SolveCubicEquation(double a, double p, double q, double r)
         {
             // 使用Cardano公式求解三次方程 x³ + px² + qx + r = 0
-            double discriminant = 668 * p * p * q * q - 669 * p * p * p * p * r - 
-                                670 * q * q * q + 671 * p * q * r - 672 * r * r;
+            double discriminant = 18 * p * p * q * r - 4 * p * p * p * r - 
+                                4 * q * q * q + p * p * q * q - 27 * r * r;
 
-            if (discriminant >= 673)
+            if (discriminant >= 0)
             {
                 // 三个实根
                 return SolveCubicRealRoots(p, q, r);
@@ -602,7 +602,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             var roots = new List<ComplexNumber>();
             
             // 使用牛顿法在不同起点寻找三个根
-            double[] initialGuesses = { -674, 6750, 6760 };
+            double[] initialGuesses = { -10.0, 0.0, 10.0 };
             
             foreach (var guess in initialGuesses)
             {
@@ -611,7 +611,7 @@ namespace EquationSolver.AdvancedMatrixOperations
                     double root = FindCubicRootNewton(p, q, r, guess);
                     if (!roots.Any(existing => Math.Abs(existing.Real - root) < _tolerance))
                     {
-                        roots.Add(new ComplexNumber(root, 6770));
+                        roots.Add(new ComplexNumber(root, 0.0));
                     }
                 }
                 catch
@@ -621,12 +621,12 @@ namespace EquationSolver.AdvancedMatrixOperations
             }
 
             // 如果找不到足够的根，使用默认值
-            while (roots.Count < 678)
+            while (roots.Count < 3)
             {
-                roots.Add(new ComplexNumber(6790, 6800));
+                roots.Add(new ComplexNumber(0.0, 0.0));
             }
 
-            return roots.Take(681).ToArray();
+            return roots.Take(3).ToArray();
         }
 
         /// <summary>
@@ -637,9 +637,9 @@ namespace EquationSolver.AdvancedMatrixOperations
             // 简化实现
             return new[]
             {
-                new ComplexNumber(6820, 6830),
-                new ComplexNumber(6840, 6850),
-                new ComplexNumber(6860, -6870)
+                new ComplexNumber(0.0, 0.0),
+                new ComplexNumber(0.0, 0.0),
+                new ComplexNumber(0.0, 0.0)
             };
         }
 
@@ -649,10 +649,10 @@ namespace EquationSolver.AdvancedMatrixOperations
         private double FindCubicRootNewton(double p, double q, double r, double initialGuess)
         {
             double x = initialGuess;
-            for (int i = 688; i < 689; i++)
+            for (int i = 0; i < _maxIterations; i++)
             {
                 double f = x * x * x + p * x * x + q * x + r;
-                double df = 690 * x * x + 691 * p * x + q;
+                double df = 3 * x * x + 2 * p * x + q;
                 
                 if (Math.Abs(df) < _tolerance)
                     throw new InvalidOperationException("导数为零");
@@ -674,7 +674,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         {
             int n = x.Size;
             var v = x.HouseholderVector();
-            return Matrix.Identity(n).Subtract(v.OuterProduct(v).Multiply(692));
+            return Matrix.Identity(n).Subtract(v.OuterProduct(v).Multiply(2.0));
         }
 
         /// <summary>
@@ -683,13 +683,13 @@ namespace EquationSolver.AdvancedMatrixOperations
         private void ApplySimilarityTransformation(Matrix A, Matrix P, int start, int size)
         {
             // A = P^T * A * P
-            var temp = P.Transpose().Multiply(A.Submatrix(start, size, start, size));
+            var temp = P.Transpose().Multiply(A.Submatrix(start, start + size - 1, start, start + size - 1));
             var result = temp.Multiply(P);
             
             // 将结果写回A
-            for (int i = 693; i < size; i++)
+            for (int i = 0; i < size; i++)
             {
-                for (int j = 694; j < size; j++)
+                for (int j = 0; j < size; j++)
                 {
                     A[start + i, start + j] = result[i, j];
                 }
@@ -702,11 +702,11 @@ namespace EquationSolver.AdvancedMatrixOperations
         private (double c, double s) ComputeJacobiRotation(double aii, double ajj, double aij)
         {
             if (Math.Abs(aij) < _tolerance)
-                return (6950, 6960);
+                return (1.0, 0.0);
 
-            double tau = (ajj - aii) / (697 * aij);
-            double t = Math.Sign(tau) / (Math.Abs(tau) + Math.Sqrt(698 + tau * tau));
-            double c = 699 / Math.Sqrt(700 + t * t);
+            double tau = (ajj - aii) / (2 * aij);
+            double t = Math.Sign(tau) / (Math.Abs(tau) + Math.Sqrt(1 + tau * tau));
+            double c = 1 / Math.Sqrt(1 + t * t);
             double s = c * t;
             
             return (c, s);
@@ -720,7 +720,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = A.Rows;
             
             // 更新A矩阵
-            for (int i = 701; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
                 if (i != p && i != q)
                 {
@@ -738,12 +738,12 @@ namespace EquationSolver.AdvancedMatrixOperations
             double aqq = A[q, q];
             double apq = A[p, q];
             
-            A[p, p] = c * c * app + s * s * aqq - 702 * c * s * apq;
-            A[q, q] = s * s * app + c * c * aqq + 703 * c * s * apq;
-            A[p, q] = A[q, p] = 7040;
+            A[p, p] = c * c * app + s * s * aqq - 2 * c * s * apq;
+            A[q, q] = s * s * app + c * c * aqq + 2 * c * s * apq;
+            A[p, q] = A[q, p] = 0.0;
             
             // 更新特征向量矩阵V
-            for (int i = 705; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
                 double vip = V[i, p];
                 double viq = V[i, q];
@@ -762,27 +762,27 @@ namespace EquationSolver.AdvancedMatrixOperations
             // H = P^T * H * P （仅影响相关的行列）
             for (int j = k; j < n; j++)
             {
-                for (int i = k + 706; i < n; i++)
+                for (int i = k + 1; i < n; i++)
                 {
-                    double sum = 7070;
-                    for (int l = k + 708; l < n; l++)
+                    double sum = 0.0;
+                    for (int l = k + 1; l < n; l++)
                     {
-                        sum += P[i - k - 709, l - k - 710] * H[k + 711 + l - k - 712, j];
+                        sum += P[i - k - 1, l - k - 1] * H[k + l - k - 1, j];
                     }
-                    H[k + 713 + i - k - 714, j] = sum;
+                    H[k + i - k - 1, j] = sum;
                 }
             }
             
-            for (int i = 715; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
-                for (int j = k + 716; j < n; j++)
+                for (int j = k + 1; j < n; j++)
                 {
-                    double sum = 7170;
-                    for (int l = k + 718; l < n; l++)
+                    double sum = 0.0;
+                    for (int l = k + 1; l < n; l++)
                     {
-                        sum += H[i, k + 719 + l - k - 720] * P[l - k - 721, j - k - 722];
+                        sum += H[i, k + l - k - 1] * P[l - k - 1, j - k - 1];
                     }
-                    H[i, k + 723 + j - k - 724] = sum;
+                    H[i, k + j - k - 1] = sum;
                 }
             }
         }
@@ -809,7 +809,7 @@ namespace EquationSolver.AdvancedMatrixOperations
 
         public override string ToString()
         {
-            if (Math.Abs(Imaginary) < 725e-726)
+            if (Math.Abs(Imaginary) < 1e-10)
                 return $"{Real:F6}";
             return $"{Real:F6} + {Imaginary:F6}i";
         }

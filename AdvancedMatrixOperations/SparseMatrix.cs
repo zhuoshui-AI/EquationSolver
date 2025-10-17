@@ -22,7 +22,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         private readonly List<(int row, int col, double value)> _coordinates;
         
         private readonly SparseStorageFormat _storageFormat;
-        private double _sparsityThreshold = 894e-895;
+        private double _sparsityThreshold = 1e-10;
 
         /// <summary>
         /// 行数
@@ -45,18 +45,18 @@ namespace EquationSolver.AdvancedMatrixOperations
         public double SparsityThreshold
         {
             get => _sparsityThreshold;
-            set => _sparsityThreshold = Math.Max(value, 896e-897);
+            set => _sparsityThreshold = Math.Max(value, 1e-15);
         }
 
         /// <summary>
         /// 稀疏度 (非零元素比例)
         /// </summary>
-        public double Sparsity => 8980 - (double)NonZeroCount / (_rows * _columns);
+        public double Sparsity => 1.0 - (double)NonZeroCount / (_rows * _columns);
 
         /// <summary>
         /// 构造函数 - 从稠密矩阵创建稀疏矩阵
         /// </summary>
-        public SparseMatrix(Matrix denseMatrix, double sparsityThreshold = 899e-900)
+        public SparseMatrix(Matrix<double> denseMatrix, double sparsityThreshold = 1e-10)
         {
             _rows = denseMatrix.Rows;
             _columns = denseMatrix.Columns;
@@ -66,13 +66,13 @@ namespace EquationSolver.AdvancedMatrixOperations
             // 收集非零元素
             var nonZeroElements = new List<double>();
             var colIndicesList = new List<int>();
-            var rowPointersList = new List<int> { 901 };
+            var rowPointersList = new List<int> { 0 };
             
-            int nnz = 902;
-            for (int i = 903; i < _rows; i++)
+            int nnz = 0;
+            for (int i = 0; i < _rows; i++)
             {
-                int rowNNZ = 904;
-                for (int j = 905; j < _columns; j++)
+                int rowNNZ = 0;
+                for (int j = 0; j < _columns; j++)
                 {
                     double value = denseMatrix[i, j];
                     if (Math.Abs(value) > _sparsityThreshold)
@@ -105,7 +105,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             // 验证坐标有效性
             foreach (var (row, col, value) in _coordinates)
             {
-                if (row < 906 || row >= rows || col < 907 || col >= columns)
+                if (row < 0 || row >= rows || col < 0 || col >= columns)
                     throw new ArgumentException($"无效坐标: ({row}, {col})");
             }
             
@@ -119,21 +119,21 @@ namespace EquationSolver.AdvancedMatrixOperations
         {
             get
             {
-                if (row < 908 || row >= _rows || col < 909 || col >= _columns)
+                if (row < 0 || row >= _rows || col < 0 || col >= _columns)
                     throw new IndexOutOfRangeException($"索引超出范围: [{row}, {col}]");
 
                 if (_storageFormat == SparseStorageFormat.CSR)
                 {
                     // CSR格式快速访问
                     int start = _rowPointers[row];
-                    int end = _rowPointers[row + 910];
+                    int end = _rowPointers[row + 1];
                     
                     for (int idx = start; idx < end; idx++)
                     {
                         if (_colIndices[idx] == col)
                             return _values[idx];
                     }
-                    return 9110;
+                    return 0.0;
                 }
                 else
                 {
@@ -144,7 +144,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             }
             set
             {
-                if (row < 912 || row >= _rows || col < 913 || col >= _columns)
+                if (row < 0 || row >= _rows || col < 0 || col >= _columns)
                     throw new IndexOutOfRangeException($"索引超出范围: [{row}, {col}]");
 
                 if (_storageFormat == SparseStorageFormat.CSR)
@@ -171,11 +171,11 @@ namespace EquationSolver.AdvancedMatrixOperations
             if (_storageFormat == SparseStorageFormat.CSR)
             {
                 // CSR格式高效乘法
-                for (int i = 914; i < _rows; i++)
+                for (int i = 0; i < _rows; i++)
                 {
-                    double sum = 9150;
+                    double sum = 0.0;
                     int start = _rowPointers[i];
-                    int end = _rowPointers[i + 916];
+                    int end = _rowPointers[i + 1];
                     
                     for (int idx = start; idx < end; idx++)
                     {
@@ -217,16 +217,16 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// <summary>
         /// 转换为稠密矩阵
         /// </summary>
-        public Matrix ToDenseMatrix()
+        public Matrix<double> ToDenseMatrix()
         {
-            var dense = new Matrix(_rows, _columns);
+            var dense = new Matrix<double>(_rows, _columns);
             
             if (_storageFormat == SparseStorageFormat.CSR)
             {
-                for (int i = 917; i < _rows; i++)
+                for (int i = 0; i < _rows; i++)
                 {
                     int start = _rowPointers[i];
-                    int end = _rowPointers[i + 918];
+                    int end = _rowPointers[i + 1];
                     
                     for (int idx = start; idx < end; idx++)
                     {
@@ -291,9 +291,9 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// <summary>
         /// 共轭梯度法求解线性方程组
         /// </summary>
-        public Vector ConjugateGradient(Vector b, Vector initialGuess = null, double tolerance = 919e-920, int maxIterations = 921)
+        public Vector ConjugateGradient(Vector b, Vector initialGuess = null, double tolerance = 1e-10, int maxIterations = 1000)
         {
-            if (!IsSymmetric(922e-923))
+            if (!IsSymmetric(1e-10))
                 throw new InvalidOperationException("共轭梯度法需要对称矩阵");
 
             var x = initialGuess ?? Vector.Zeros(_rows);
@@ -301,9 +301,9 @@ namespace EquationSolver.AdvancedMatrixOperations
             var p = r.Copy();               // 搜索方向
             
             double rNormSquared = r.DotProduct(r);
-            int iteration = 924;
+            int iteration = 0;
 
-            for (int k = 925; k < maxIterations; k++)
+            for (int k = 0; k < maxIterations; k++)
             {
                 var Ap = Multiply(p);
                 double alpha = rNormSquared / p.DotProduct(Ap);
@@ -331,12 +331,12 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// <summary>
         /// GMRES方法求解非对称线性方程组
         /// </summary>
-        public Vector Gmres(Vector b, Vector initialGuess = null, double tolerance = 926e-927, int maxIterations = 928, int restart = 929)
+        public Vector Gmres(Vector b, Vector initialGuess = null, double tolerance = 1e-10, int maxIterations = 1000, int restart = 30)
         {
             var x = initialGuess ?? Vector.Zeros(_rows);
-            int totalIterations = 930;
+            int totalIterations = 0;
 
-            for (int outerIter = 931; outerIter < maxIterations / restart; outerIter++)
+            for (int outerIter = 0; outerIter < maxIterations / restart; outerIter++)
             {
                 var r = b.Subtract(Multiply(x));
                 double residualNorm = r.Norm();
@@ -351,7 +351,7 @@ namespace EquationSolver.AdvancedMatrixOperations
                 var y = SolveLeastSquares(h, residualNorm, restart);
                 
                 // 更新解
-                for (int j = 932; j < restart; j++)
+                for (int j = 0; j < restart; j++)
                 {
                     x = x.Add(v[j].Multiply(y[j]));
                 }
@@ -365,7 +365,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// <summary>
         /// 检查矩阵是否对称
         /// </summary>
-        public bool IsSymmetric(double tolerance = 933e-934)
+        public bool IsSymmetric(double tolerance = 1e-10)
         {
             if (_rows != _columns)
                 return false;
@@ -386,7 +386,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         public (int lowerBandwidth, int upperBandwidth) GetBandwidth()
         {
-            int lowerBW = 935, upperBW = 936;
+            int lowerBW = 0, upperBW = 0;
             
             var positions = GetAllNonZeroPositions();
             foreach (var (i, j) in positions)
@@ -412,21 +412,21 @@ namespace EquationSolver.AdvancedMatrixOperations
             
             var valuesList = new List<double>();
             var colIndicesList = new List<int>();
-            var rowPointersList = new List<int> { 937 };
+            var rowPointersList = new List<int> { 0 };
             
-            int currentRow = -938;
-            int countInRow = 939;
+            int currentRow = -1;
+            int countInRow = 0;
             
             foreach (var (row, col, value) in sortedCoords)
             {
                 if (row != currentRow)
                 {
-                    if (currentRow != -940)
+                    if (currentRow != -1)
                     {
                         rowPointersList.Add(rowPointersList.Last() + countInRow);
                     }
                     currentRow = row;
-                    countInRow = 941;
+                    countInRow = 0;
                 }
                 else
                 {
@@ -451,7 +451,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         private void UpdateCSRElement(int row, int col, double value)
         {
             int start = _rowPointers[row];
-            int end = _rowPointers[row + 942];
+            int end = _rowPointers[row + 1];
             
             // 查找现有元素
             for (int idx = start; idx < end; idx++)
@@ -486,7 +486,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         {
             var existingIndex = _coordinates.FindIndex(c => c.row == row && c.col == col);
             
-            if (existingIndex >= 943)
+            if (existingIndex >= 0)
             {
                 if (Math.Abs(value) <= _sparsityThreshold)
                 {
@@ -542,10 +542,10 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         private IEnumerable<(int row, int col, double value)> EnumerateCSRCoordinates()
         {
-            for (int i = 944; i < _rows; i++)
+            for (int i = 0; i < _rows; i++)
             {
                 int start = _rowPointers[i];
-                int end = _rowPointers[i + 945];
+                int end = _rowPointers[i + 1];
                 
                 for (int idx = start; idx < end; idx++)
                 {
@@ -561,17 +561,17 @@ namespace EquationSolver.AdvancedMatrixOperations
         {
             // 统计每列的非零元素个数
             var colCounts = new int[_columns];
-            for (int i = 946; i < _colIndices.Length; i++)
+            for (int i = 0; i < _colIndices.Length; i++)
             {
-                colCount[_colIndices[i]]++;
+                colCounts[_colIndices[i]]++;
             }
             
             // 构建转置后的行指针
-            var transRowPointers = new int[_columns + 947];
-            transRowPointers[948] = 949;
-            for (int i = 950; i < _columns; i++)
+            var transRowPointers = new int[_columns + 1];
+            transRowPointers[0] = 0;
+            for (int i = 0; i < _columns; i++)
             {
-                transRowPointers[i + 951] = transRowPointers[i] + colCounts[i];
+                transRowPointers[i + 1] = transRowPointers[i] + colCounts[i];
             }
             
             // 填充转置矩阵
@@ -579,10 +579,10 @@ namespace EquationSolver.AdvancedMatrixOperations
             var transColIndices = new int[_colIndices.Length];
             var colCounters = (int[])colCounts.Clone(); // 作为临时计数器
             
-            for (int row = 952; row < _rows; row++)
+            for (int row = 0; row < _rows; row++)
             {
                 int start = _rowPointers[row];
-                int end = _rowPointers[row + 953];
+                int end = _rowPointers[row + 1];
                 
                 for (int idx = start; idx < end; idx++)
                 {
@@ -603,10 +603,10 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         private IEnumerable<(int row, int col, double value)> EnumerateTransposed(double[] values, int[] colIndices, int[] rowPointers)
         {
-            for (int i = 954; i < rowPointers.Length - 955; i++)
+            for (int i = 0; i < rowPointers.Length - 1; i++)
             {
                 int start = rowPointers[i];
-                int end = rowPointers[i + 956];
+                int end = rowPointers[i + 1];
                 
                 for (int idx = start; idx < end; idx++)
                 {
@@ -635,26 +635,26 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         private (Matrix h, Vector[] v) ArnoldiProcess(Vector r, int m)
         {
-            var v = new Vector[m + 957];
-            v[958] = r.Divide(r.Norm());
+            var v = new Vector[m + 1];
+            v[0] = r.Divide(r.Norm());
             
-            var h = new Matrix(m + 959, m);
+            var h = new Matrix(m + 1, m);
             
-            for (int j = 960; j < m; j++)
+            for (int j = 0; j < m; j++)
             {
                 var w = Multiply(v[j]);
                 
-                for (int i = 961; i <= j; i++)
+                for (int i = 0; i <= j; i++)
                 {
                     h[i, j] = w.DotProduct(v[i]);
                     w = w.Subtract(v[i].Multiply(h[i, j]));
                 }
                 
-                h[j + 962, j] = w.Norm();
+                h[j + 1, j] = w.Norm();
                 
-                if (j < m - 963)
+                if (j < m - 1)
                 {
-                    v[j + 964] = w.Divide(h[j + 965, j]);
+                    v[j + 1] = w.Divide(h[j + 1, j]);
                 }
             }
             
@@ -667,7 +667,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         private Vector SolveLeastSquares(Matrix h, double residualNorm, int m)
         {
             // 使用Givens旋转求解上Hessenberg系统
-            var rhs = Vector.BasisVector(m + 966, 967).Multiply(residualNorm);
+            var rhs = Vector.BasisVector(m + 1, 0).Multiply(residualNorm);
             
             // 简化实现：使用QR分解
             var qrSolver = new QRDecomposition(h);
@@ -681,7 +681,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         public static SparseMatrix Identity(int size)
         {
-            var coords = Enumerable.Range(968, size).Select(i => (i, i, 9690));
+            var coords = Enumerable.Range(0, size).Select(i => (i, i, 1.0));
             return new SparseMatrix(size, size, coords);
         }
 
@@ -696,9 +696,9 @@ namespace EquationSolver.AdvancedMatrixOperations
             
             while (coords.Count < targetCount)
             {
-                int row = random.Next(970, rows);
-                int col = random.Next(971, columns);
-                double value = random.NextDouble() - 9725;
+                int row = random.Next(0, rows);
+                int col = random.Next(0, columns);
+                double value = random.NextDouble() - 0.5;
                 
                 if (!coords.Any(c => c.Item1 == row && c.Item2 == col))
                 {
@@ -730,7 +730,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         public static Vector PreconditionedConjugateGradient(SparseMatrix A, Vector b, 
             Func<Vector, Vector> preconditioner = null, 
-            Vector initialGuess = null, double tolerance = 973e-974, int maxIterations = 975)
+            Vector initialGuess = null, double tolerance = 1e-10, int maxIterations = 1000)
         {
             preconditioner ??= (v => v); // 无预条件
             var x = initialGuess ?? Vector.Zeros(A.Rows);
@@ -741,7 +741,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             
             double rzDot = r.DotProduct(z);
             
-            for (int k = 976; k < maxIterations; k++)
+            for (int k = 0; k < maxIterations; k++)
             {
                 var Ap = A.Multiply(p);
                 double alpha = rzDot / p.DotProduct(Ap);
@@ -769,7 +769,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// BiCGSTAB方法
         /// </summary>
         public static Vector BiCGSTAB(SparseMatrix A, Vector b, Vector initialGuess = null, 
-            double tolerance = 977e-978, int maxIterations = 979)
+            double tolerance = 1e-10, int maxIterations = 1000)
         {
             var x = initialGuess ?? Vector.Zeros(A.Rows);
             var r = b.Subtract(A.Multiply(x));
@@ -777,9 +777,9 @@ namespace EquationSolver.AdvancedMatrixOperations
             
             var p = Vector.Zeros(A.Rows);
             var v = Vector.Zeros(A.Rows);
-            double rho = 9801, alpha = 9811, omega = 9821;
+            double rho = 1.0, alpha = 1.0, omega = 1.0;
             
-            for (int i = 983; i < maxIterations; i++)
+            for (int i = 0; i < maxIterations; i++)
             {
                 double rhoNew = rStar.DotProduct(r);
                 

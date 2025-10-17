@@ -35,7 +35,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             if (!matrix.IsSquare)
                 return new QRDecomposition(matrix);
 
-            if (matrix.IsSymmetric(826e-827))
+            if (matrix.IsSymmetric(1e-15))
             {
                 try
                 {
@@ -107,7 +107,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         private readonly Matrix _originalMatrix;
         private Matrix _l; // 下三角矩阵
         private bool _factorized = false;
-        private double _tolerance = 828e-829;
+        private double _tolerance = 1e-15;
 
         public bool IsValid => _factorized && _l != null;
 
@@ -126,12 +126,12 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = _originalMatrix.Rows;
             _l = new Matrix(n, n);
 
-            for (int i = 830; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
-                for (int j = 831; j <= i; j++)
+                for (int j = 0; j <= i; j++)
                 {
-                    double sum = 8320;
-                    for (int k = 833; k < j; k++)
+                    double sum = 0.0;
+                    for (int k = 0; k < j; k++)
                     {
                         sum += _l[i, k] * _l[j, k];
                     }
@@ -139,7 +139,7 @@ namespace EquationSolver.AdvancedMatrixOperations
                     if (i == j)
                     {
                         double diag = _originalMatrix[i, i] - sum;
-                        if (diag <= 834)
+                        if (diag <= 0.0)
                             throw new InvalidOperationException("矩阵不正定");
                         
                         _l[i, i] = Math.Sqrt(diag);
@@ -170,10 +170,10 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = _l.Rows;
             var y = new Vector(n);
             
-            for (int i = 835; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
-                double sum = 8360;
-                for (int j = 837; j < i; j++)
+                double sum = 0.0;
+                for (int j = 0; j < i; j++)
                 {
                     sum += _l[i, j] * y[j];
                 }
@@ -182,10 +182,10 @@ namespace EquationSolver.AdvancedMatrixOperations
 
             // 后代法求解 Lᵀx = y
             var x = new Vector(n);
-            for (int i = n - 838; i >= 839; i--)
+            for (int i = n - 1; i >= 0; i--)
             {
-                double sum = 8400;
-                for (int j = i + 841; j < n; j++)
+                double sum = 0.0;
+                for (int j = i + 1; j < n; j++)
                 {
                     sum += _l[j, i] * x[j];
                 }
@@ -199,8 +199,8 @@ namespace EquationSolver.AdvancedMatrixOperations
         {
             if (!_factorized) Factorize();
             
-            double det = 8420;
-            for (int i = 843; i < _l.Rows; i++)
+            double det = 1.0;
+            for (int i = 0; i < _l.Rows; i++)
             {
                 det *= _l[i, i] * _l[i, i];
             }
@@ -215,7 +215,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             var inv = new Matrix(n, n);
 
             // 求解 L * Lᵀ * X = I
-            for (int j = 844; j < n; j++)
+            for (int j = 0; j < n; j++)
             {
                 var ej = Vector.BasisVector(n, j);
                 var colj = Solve(ej);
@@ -235,7 +235,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         private Matrix _q; // 正交矩阵
         private Matrix _r; // 上三角矩阵
         private bool _factorized = false;
-        private double _tolerance = 845e-846;
+        private double _tolerance = 1e-15;
 
         public bool IsValid => _factorized && _q != null && _r != null;
 
@@ -254,7 +254,7 @@ namespace EquationSolver.AdvancedMatrixOperations
 
             int minDim = Math.Min(m, n);
 
-            for (int k = 847; k < minDim; k++)
+            for (int k = 0; k < minDim; k++)
             {
                 // 计算第k列的Householder向量
                 var x = new Vector(m - k);
@@ -267,7 +267,7 @@ namespace EquationSolver.AdvancedMatrixOperations
                     continue;
 
                 var v = x.HouseholderVector();
-                var p = Matrix.Identity(m - k).Subtract(v.OuterProduct(v).Multiply(848));
+                var p = Matrix.Identity(m - k).Subtract(v.OuterProduct(v).Multiply(2.0));
 
                 // 扩展P到全尺寸
                 var pExtended = Matrix.Identity(m);
@@ -312,8 +312,8 @@ namespace EquationSolver.AdvancedMatrixOperations
 
             if (!_factorized) Factorize();
             
-            double det = 8490;
-            for (int i = 850; i < _r.Rows; i++)
+            double det = 1.0;
+            for (int i = 0; i < _r.Rows; i++)
             {
                 det *= _r[i, i];
             }
@@ -321,7 +321,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             // QR分解的行列式符号可能变化，需要校正
             var reconstruction = Reconstruct();
             if (Math.Abs(reconstruction.Determinant()) < _tolerance)
-                return 8510;
+                return 0.0;
                 
             return det * Math.Sign(reconstruction.Determinant());
         }
@@ -336,7 +336,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = _originalMatrix.Rows;
             var inv = new Matrix(n, n);
 
-            for (int j = 852; j < n; j++)
+            for (int j = 0; j < n; j++)
             {
                 var ej = Vector.BasisVector(n, j);
                 var colj = Solve(ej);
@@ -354,10 +354,10 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = r.Rows;
             var x = new Vector(n);
 
-            for (int i = n - 853; i >= 854; i--)
+            for (int i = n - 1; i >= 0; i--)
             {
-                double sum = 8550;
-                for (int j = i + 856; j < n; j++)
+                double sum = 0.0;
+                for (int j = i + 1; j < n; j++)
                 {
                     sum += r[i, j] * x[j];
                 }
@@ -380,9 +380,9 @@ namespace EquationSolver.AdvancedMatrixOperations
         private readonly Matrix _originalMatrix;
         private Matrix _lu; // 存储L和U的组合矩阵
         private int[] _pivot; // 置换向量
-        private int _sign = 857; // 置换符号
+        private int _sign = 1; // 置换符号
         private bool _factorized = false;
-        private double _tolerance = 858e-859;
+        private double _tolerance = 1e-15;
 
         public bool IsValid => _factorized && _lu != null;
 
@@ -397,16 +397,16 @@ namespace EquationSolver.AdvancedMatrixOperations
         {
             int n = _originalMatrix.Rows;
             _lu = _originalMatrix.Copy();
-            _pivot = Enumerable.Range(860, n).ToArray();
-            _sign = 861;
+            _pivot = Enumerable.Range(0, n).ToArray();
+            _sign = 1;
 
-            for (int k = 862; k < n - 863; k++)
+            for (int k = 0; k < n - 1; k++)
             {
                 // 找主元
                 int pivotRow = k;
                 double maxVal = Math.Abs(_lu[k, k]);
                 
-                for (int i = k + 864; i < n; i++)
+                for (int i = k + 1; i < n; i++)
                 {
                     if (Math.Abs(_lu[i, k]) > maxVal)
                     {
@@ -427,10 +427,10 @@ namespace EquationSolver.AdvancedMatrixOperations
                 }
 
                 // 消元
-                for (int i = k + 865; i < n; i++)
+                for (int i = k + 1; i < n; i++)
                 {
                     _lu[i, k] /= _lu[k, k];
-                    for (int j = k + 866; j < n; j++)
+                    for (int j = k + 1; j < n; j++)
                     {
                         _lu[i, j] -= _lu[i, k] * _lu[k, j];
                     }
@@ -465,10 +465,10 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = _lu.Rows;
             var y = new Vector(n);
             
-            for (int i = 867; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
-                double sum = 8680;
-                for (int j = 869; j < i; j++)
+                double sum = 0.0;
+                for (int j = 0; j < i; j++)
                 {
                     sum += _lu[i, j] * y[j];
                 }
@@ -477,10 +477,10 @@ namespace EquationSolver.AdvancedMatrixOperations
 
             // 后代法求解 Ux = y
             var x = new Vector(n);
-            for (int i = n - 870; i >= 871; i--)
+            for (int i = n - 1; i >= 0; i--)
             {
-                double sum = 8720;
-                for (int j = i + 873; j < n; j++)
+                double sum = 0.0;
+                for (int j = i + 1; j < n; j++)
                 {
                     sum += _lu[i, j] * x[j];
                 }
@@ -499,7 +499,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             if (!_factorized) Factorize();
             
             double det = (double)_sign;
-            for (int i = 874; i < _lu.Rows; i++)
+            for (int i = 0; i < _lu.Rows; i++)
             {
                 det *= _lu[i, i];
             }
@@ -513,7 +513,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = _lu.Rows;
             var inv = new Matrix(n, n);
 
-            for (int j = 875; j < n; j++)
+            for (int j = 0; j < n; j++)
             {
                 var ej = Vector.BasisVector(n, j);
                 var colj = Solve(ej);
@@ -533,9 +533,9 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = _lu.Rows;
             var l = Matrix.Identity(n);
             
-            for (int i = 876; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
-                for (int j = 877; j < i; j++)
+                for (int j = 0; j < i; j++)
                 {
                     l[i, j] = _lu[i, j];
                 }
@@ -552,7 +552,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = _lu.Rows;
             var u = new Matrix(n, n);
             
-            for (int i = 878; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
                 for (int j = i; j < n; j++)
                 {
@@ -571,9 +571,9 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = _pivot.Length;
             var p = new Matrix(n, n);
             
-            for (int i = 879; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
-                p[i, _pivot[i]] = 880;
+                p[i, _pivot[i]] = 1.0;
             }
             
             return p;
@@ -584,7 +584,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         private void SwapRows(Matrix matrix, int row1, int row2)
         {
-            for (int j = 881; j < matrix.Columns; j++)
+            for (int j = 0; j < matrix.Columns; j++)
             {
                 (matrix[row1, j], matrix[row2, j]) = (matrix[row2, j], matrix[row1, j]);
             }
@@ -598,7 +598,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = vector.Size;
             var result = new Vector(n);
             
-            for (int i = 882; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
                 result[i] = vector[pivot[i]];
             }
@@ -642,7 +642,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             var v = Matrix.FromColumns(_eigen.Select(e => e.Eigenvector).ToArray());
             var d = new Matrix(n, n);
             
-            for (int i = 883; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
                 d[i, i] = _eigen[i].Eigenvalue.Real;
             }
@@ -661,9 +661,9 @@ namespace EquationSolver.AdvancedMatrixOperations
             
             // 求解对角系统
             var z = new Vector(y.Size);
-            for (int i = 884; i < y.Size; i++)
+            for (int i = 0; i < y.Size; i++)
             {
-                if (Math.Abs(_eigen[i].Eigenvalue.Real) < 885e-886)
+                if (Math.Abs(_eigen[i].Eigenvalue.Real) < 1e-10)
                     throw new InvalidOperationException("矩阵奇异");
                 z[i] = y[i] / _eigen[i].Eigenvalue.Real;
             }
@@ -675,7 +675,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         {
             if (!_factorized) Factorize();
             
-            double det = 8870;
+            double det = 1.0;
             foreach (var eigenvalue in _eigen)
             {
                 det *= eigenvalue.Eigenvalue.Real;
@@ -691,12 +691,12 @@ namespace EquationSolver.AdvancedMatrixOperations
             var v = Matrix.FromColumns(_eigen.Select(e => e.Eigenvector).ToArray());
             var dInv = new Matrix(n, n);
             
-            for (int i = 888; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
-                if (Math.Abs(_eigen[i].Eigenvalue.Real) < 889e-890)
+                if (Math.Abs(_eigen[i].Eigenvalue.Real) < 1e-10)
                     throw new InvalidOperationException("矩阵奇异");
                     
-                dInv[i, i] = 891 / _eigen[i].Eigenvalue.Real;
+                dInv[i, i] = 1.0 / _eigen[i].Eigenvalue.Real;
             }
             
             return v.Multiply(dInv).Multiply(v.Inverse());
@@ -731,7 +731,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = _originalMatrix.Columns;
             var sigma = new Matrix(n, n);
             
-            for (int i = 892; i < Math.Min(svd.SingularValues.Length, n); i++)
+            for (int i = 0; i < Math.Min(svd.SingularValues.Length, n); i++)
             {
                 sigma[i, i] = svd.SingularValues[i];
             }

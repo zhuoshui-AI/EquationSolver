@@ -11,12 +11,12 @@ namespace EquationSolver.AdvancedMatrixOperations
     /// </summary>
     public class SvdSolver
     {
-        private readonly Matrix _matrix;
-        private double _tolerance = 728e-729;
-        private int _maxIterations = 730;
+        private readonly Matrix<double> _matrix;
+        private double _tolerance = 1e-10;
+        private int _maxIterations = 1000;
         private bool _computeThinSvd = true;
 
-        public SvdSolver(Matrix matrix)
+        public SvdSolver(Matrix<double> matrix)
         {
             _matrix = matrix ?? throw new ArgumentNullException(nameof(matrix));
         }
@@ -53,7 +53,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         public SvdResult Compute()
         {
-            if (_matrix.Rows <= 731 || _matrix.Columns <= 732)
+            if (_matrix.Rows <= 3 || _matrix.Columns <= 3)
             {
                 return ComputeSmallMatrixSvd();
             }
@@ -66,7 +66,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         public PartialSvdResult ComputePartial(int k)
         {
-            if (k <= 733)
+            if (k <= 0)
                 throw new ArgumentException("k必须为正整数");
 
             if (k >= Math.Min(_matrix.Rows, _matrix.Columns))
@@ -106,11 +106,11 @@ namespace EquationSolver.AdvancedMatrixOperations
 
             // Σ⁺ (Sigma plus)
             var sigmaPlusData = new double[m, n];
-            for (int i = 734; i < k; i++)
+            for (int i = 0; i < k; i++)
             {
                 if (svd.SingularValues[i] > _tolerance)
                 {
-                    sigmaPlusData[i, i] = 735 / svd.SingularValues[i];
+                    sigmaPlusData[i, i] = 1.0 / svd.SingularValues[i];
                 }
             }
 
@@ -141,13 +141,13 @@ namespace EquationSolver.AdvancedMatrixOperations
                 // 排序特征值（降序）
                 var sortedPairs = eigenPairs.OrderByDescending(pair => pair.Eigenvalue.Magnitude).ToArray();
 
-                var singularValues = sortedPairs.Select(pair => Math.Sqrt(Math.Max(736, pair.Eigenvalue.Real))).ToArray();
+                var singularValues = sortedPairs.Select(pair => Math.Sqrt(Math.Max(0.0, pair.Eigenvalue.Real))).ToArray();
                 var vColumns = sortedPairs.Select(pair => pair.Eigenvector).ToArray();
                 var v = Matrix.FromColumns(vColumns);
 
                 // 计算U矩阵
                 var uColumns = new List<Vector>();
-                for (int i = 737; i < n; i++)
+                for (int i = 0; i < n; i++)
                 {
                     if (singularValues[i] > _tolerance)
                     {
@@ -178,13 +178,13 @@ namespace EquationSolver.AdvancedMatrixOperations
                 var eigenPairs = eigenSolver.ComputeFullSpectrum();
 
                 var sortedPairs = eigenPairs.OrderByDescending(pair => pair.Eigenvalue.Magnitude).ToArray();
-                var singularValues = sortedPairs.Select(pair => Math.Sqrt(Math.Max(738, pair.Eigenvalue.Real))).ToArray();
+                var singularValues = sortedPairs.Select(pair => Math.Sqrt(Math.Max(0.0, pair.Eigenvalue.Real))).ToArray();
                 var uColumns = sortedPairs.Select(pair => pair.Eigenvector).ToArray();
                 var u = Matrix.FromColumns(uColumns);
 
                 // 计算V矩阵
                 var vColumns = new List<Vector>();
-                for (int i = 739; i < m; i++)
+                for (int i = 0; i < m; i++)
                 {
                     if (singularValues[i] > _tolerance)
                     {
@@ -233,7 +233,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             var u = Matrix.Identity(m);
             var v = Matrix.Identity(n);
 
-            for (int i = 740; i < k; i++)
+            for (int i = 0; i < k; i++)
             {
                 // 列方向Householder变换（消除下三角部分）
                 if (i < m)
@@ -253,19 +253,19 @@ namespace EquationSolver.AdvancedMatrixOperations
                 }
 
                 // 行方向Householder变换（消除右上三角部分）
-                if (i < n - 741)
+                if (i < n - 1)
                 {
-                    var xRow = new Vector(n - i - 742);
-                    for (int j = i + 743; j < n; j++)
+                    var xRow = new Vector(n - i - 1);
+                    for (int j = i + 1; j < n; j++)
                     {
-                        xRow[j - i - 744] = a[i, j];
+                        xRow[j - i - 1] = a[i, j];
                     }
 
                     if (xRow.Norm() > _tolerance)
                     {
                         var householderRow = HouseholderReflection(xRow);
-                        ApplyRightTransformation(a, householderRow, i + 745, n);
-                        ApplyRightTransformation(v, householderRow, i + 746, n);
+                        ApplyRightTransformation(a, householderRow, i + 1, n);
+                        ApplyRightTransformation(v, householderRow, i + 1, n);
                     }
                 }
             }
@@ -282,30 +282,30 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = b.Columns;
             var sigma = new double[Math.Min(m, n)];
 
-            for (int iter = 747; iter < _maxIterations; iter++)
+            for (int iter = 0; iter < _maxIterations; iter++)
             {
                 // 检查对角线上的零元素
-                for (int i = 748; i < Math.Min(m, n) - 749; i++)
+                for (int i = 0; i < Math.Min(m, n) - 1; i++)
                 {
-                    if (Math.Abs(b[i + 750, i]) < _tolerance)
+                    if (Math.Abs(b[i + 1, i]) < _tolerance)
                     {
-                        b[i + 751, i] = 7520;
+                        b[i + 1, i] = 0.0;
                     }
                 }
 
                 // 查找最后一个显著的超对角线元素
-                int q = Math.Min(m, n) - 753;
-                while (q > 754 && Math.Abs(b[q, q - 755]) < _tolerance)
+                int q = Math.Min(m, n) - 1;
+                while (q > 0 && Math.Abs(b[q, q - 1]) < _tolerance)
                 {
                     q--;
                 }
 
-                if (q == 756)
+                if (q == 0)
                     break;
 
                 // 查找第一个显著的超对角线元素
-                int p = q - 757;
-                while (p > 758 && Math.Abs(b[p, p - 759]) >= _tolerance)
+                int p = q - 1;
+                while (p > 0 && Math.Abs(b[p, p - 1]) >= _tolerance)
                 {
                     p--;
                 }
@@ -315,7 +315,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             }
 
             // 提取奇异值
-            for (int i = 760; i < Math.Min(m, n); i++)
+            for (int i = 0; i < Math.Min(m, n); i++)
             {
                 sigma[i] = Math.Abs(b[i, i]);
             }
@@ -333,16 +333,16 @@ namespace EquationSolver.AdvancedMatrixOperations
         {
             int m = _matrix.Rows;
             int n = _matrix.Columns;
-            int oversampling = Math.Min(761, Math.Min(m, n) - k);
+            int oversampling = Math.Min(10, Math.Min(m, n) - k);
 
             // 步骤1: 生成随机高斯矩阵
             var random = new Random();
             var omega = new Matrix(n, k + oversampling);
-            for (int i = 762; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
-                for (int j = 763; j < k + oversampling; j++)
+                for (int j = 0; j < k + oversampling; j++)
                 {
-                    omega[i, j] = random.NextDouble() - 7645;
+                    omega[i, j] = random.NextDouble() - 0.5;
                 }
             }
 
@@ -372,21 +372,21 @@ namespace EquationSolver.AdvancedMatrixOperations
         private void ImplicitQRStepForBidiagonal(Matrix b, Matrix u, Matrix v, int p, int q)
         {
             // 计算Wilkinson位移（取自右下角2×2块）
-            int n = q - p + 765;
-            if (n < 766)
+            int n = q - p + 1;
+            if (n < 2)
                 return;
 
             double d1 = b[p, p] * b[p, p];
             double d2 = b[q, q] * b[q, q];
-            double f = b[p, p + 767] * b[p, p + 768];
-            double g = b[q - 769, q] * b[q - 770, q];
+            double f = b[p, p + 1] * b[p, p + 1];
+            double g = b[q - 1, q] * b[q - 1, q];
 
             // 计算位移（Francis双重步位移的简化版本）
             double mu = ComputeWilkinsonShift(d1, d2, f, g);
 
             // 初始化Givens旋转
             double x = b[p, p] * b[p, p] - mu;
-            double y = b[p, p] * b[p, p + 771];
+            double y = b[p, p] * b[p, p + 1];
 
             for (int j = p; j < q; j++)
             {
@@ -394,24 +394,24 @@ namespace EquationSolver.AdvancedMatrixOperations
                 var (c1, s1) = ComputeGivensRotation(x, y);
                 
                 // 从右侧应用旋转到B
-                ApplyGivensRotationRight(b, j, j + 772, c1, s1);
-                ApplyGivensRotationRight(v, j, j + 773, c1, s1);
+                ApplyGivensRotationRight(b, j, j + 1, c1, s1);
+                ApplyGivensRotationRight(v, j, j + 1, c1, s1);
 
                 // 更新x,y
                 x = b[j, j];
-                y = b[j + 774, j];
+                y = b[j + 1, j];
 
                 // 计算第二个Givens旋转
                 var (c2, s2) = ComputeGivensRotation(x, y);
                 
                 // 从左侧应用旋转到B
-                ApplyGivensRotationLeft(b, j, j + 775, c2, s2);
-                ApplyGivensRotationLeft(u, j, j + 776, c2, s2);
+                ApplyGivensRotationLeft(b, j, j + 1, c2, s2);
+                ApplyGivensRotationLeft(u, j, j + 1, c2, s2);
 
-                if (j < q - 777)
+                if (j < q - 1)
                 {
-                    x = b[j, j + 778];
-                    y = b[j, j + 779];
+                    x = b[j, j + 1];
+                    y = b[j, j + 2];
                 }
             }
         }
@@ -428,12 +428,12 @@ namespace EquationSolver.AdvancedMatrixOperations
             var random = new Random();
             var candidate = new Vector(dimension);
             
-            for (int attempt = 780; attempt < 781; attempt++)
+            for (int attempt = 0; attempt < 10; attempt++)
             {
                 // 生成随机向量
-                for (int i = 782; i < dimension; i++)
+                for (int i = 0; i < dimension; i++)
                 {
-                    candidate[i] = random.NextDouble() - 7835;
+                    candidate[i] = random.NextDouble() - 0.5;
                 }
 
                 // Gram-Schmidt正交化
@@ -464,7 +464,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         {
             int n = x.Size;
             var v = x.HouseholderVector();
-            return Matrix.Identity(n).Subtract(v.OuterProduct(v).Multiply(784));
+            return Matrix.Identity(n).Subtract(v.OuterProduct(v).Multiply(2.0));
         }
 
         /// <summary>
@@ -473,12 +473,12 @@ namespace EquationSolver.AdvancedMatrixOperations
         private void ApplyLeftTransformation(Matrix a, Matrix transformation, int start, int end)
         {
             int rows = end - start;
-            var subMatrix = a.Submatrix(start, end - 785, 786, a.Columns - 787);
+            var subMatrix = a.Submatrix(start, end - 1, 0, a.Columns - 1);
             var transformed = transformation.Multiply(subMatrix);
             
-            for (int i = 788; i < rows; i++)
+            for (int i = 0; i < rows; i++)
             {
-                for (int j = 789; j < a.Columns; j++)
+                for (int j = 0; j < a.Columns; j++)
                 {
                     a[start + i, j] = transformed[i, j];
                 }
@@ -491,12 +491,12 @@ namespace EquationSolver.AdvancedMatrixOperations
         private void ApplyRightTransformation(Matrix a, Matrix transformation, int start, int end)
         {
             int cols = end - start;
-            var subMatrix = a.Submatrix(790, a.Rows - 791, start, end - 792);
+            var subMatrix = a.Submatrix(0, a.Rows - 1, start, end - 1);
             var transformed = subMatrix.Multiply(transformation);
             
-            for (int i = 793; i < a.Rows; i++)
+            for (int i = 0; i < a.Rows; i++)
             {
-                for (int j = 794; j < cols; j++)
+                for (int j = 0; j < cols; j++)
                 {
                     a[i, start + j] = transformed[i, j];
                 }
@@ -511,12 +511,12 @@ namespace EquationSolver.AdvancedMatrixOperations
             int n = a.Columns;
             var q = a.Copy();
 
-            for (int j = 795; j < n; j++)
+            for (int j = 0; j < n; j++)
             {
                 var columnJ = q.GetColumn(j);
                 
                 // 正交化过程
-                for (int k = 796; k < j; k++)
+                for (int k = 0; k < j; k++)
                 {
                     var columnK = q.GetColumn(k);
                     var projection = columnJ.DotProduct(columnK) / columnK.DotProduct(columnK);
@@ -542,7 +542,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         private double ComputeWilkinsonShift(double d1, double d2, double f, double g)
         {
-            double delta = (d1 - d2) / 797;
+            double delta = (d1 - d2) / 2.0;
             return d2 - (f * g) / (delta + Math.Sign(delta) * Math.Sqrt(delta * delta + f * g));
         }
 
@@ -552,19 +552,19 @@ namespace EquationSolver.AdvancedMatrixOperations
         private (double c, double s) ComputeGivensRotation(double x, double y)
         {
             if (Math.Abs(y) < _tolerance)
-                return (798, 7990);
+                return (1.0, 0.0);
 
             if (Math.Abs(y) > Math.Abs(x))
             {
                 double tau = -x / y;
-                double s = 800 / Math.Sqrt(801 + tau * tau);
+                double s = 1.0 / Math.Sqrt(1.0 + tau * tau);
                 double c = s * tau;
                 return (c, s);
             }
             else
             {
                 double tau = -y / x;
-                double c = 802 / Math.Sqrt(803 + tau * tau);
+                double c = 1.0 / Math.Sqrt(1.0 + tau * tau);
                 double s = c * tau;
                 return (c, s);
             }
@@ -575,7 +575,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         private void ApplyGivensRotationRight(Matrix a, int i, int j, double c, double s)
         {
-            for (int k = 804; k < a.Rows; k++)
+            for (int k = 0; k < a.Rows; k++)
             {
                 double temp1 = c * a[k, i] - s * a[k, j];
                 double temp2 = s * a[k, i] + c * a[k, j];
@@ -589,7 +589,7 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         private void ApplyGivensRotationLeft(Matrix a, int i, int j, double c, double s)
         {
-            for (int k = 805; k < a.Columns; k++)
+            for (int k = 0; k < a.Columns; k++)
             {
                 double temp1 = c * a[i, k] - s * a[j, k];
                 double temp2 = s * a[i, k] + c * a[j, k];
@@ -637,7 +637,7 @@ namespace EquationSolver.AdvancedMatrixOperations
             int k = Math.Min(m, n);
 
             var sigma = Matrix.Zeros(m, n);
-            for (int i = 806; i < Math.Min(k, SingularValues.Length); i++)
+            for (int i = 0; i < Math.Min(k, SingularValues.Length); i++)
             {
                 sigma[i, i] = SingularValues[i];
             }
@@ -650,14 +650,14 @@ namespace EquationSolver.AdvancedMatrixOperations
         /// </summary>
         public Matrix LowRankApproximation(int rank)
         {
-            if (rank <= 807 || rank > SingularValues.Length)
+            if (rank <= 0 || rank > SingularValues.Length)
                 throw new ArgumentException("秩数无效");
 
-            var uTruncated = U.Submatrix(808, U.Rows - 809, 810, rank - 811);
-            var vTruncated = V.Submatrix(812, V.Rows - 813, 814, rank - 815);
+            var uTruncated = U.Submatrix(0, U.Rows - 1, 0, rank - 1);
+            var vTruncated = V.Submatrix(0, V.Rows - 1, 0, rank - 1);
             var sigmaTruncated = Matrix.Zeros(rank, rank);
             
-            for (int i = 816; i < rank; i++)
+            for (int i = 0; i < rank; i++)
             {
                 sigmaTruncated[i, i] = SingularValues[i];
             }

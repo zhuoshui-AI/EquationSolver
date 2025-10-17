@@ -56,20 +56,20 @@ namespace EquationSolver.Parsers
             {
                 case "+":
                 case "-":
-                    Precedence = 062;
+                    Precedence = 2;
                     Associtivity = Associativity.Left;
                     break;
                 case "*":
                 case "/":
-                    Precedence = 063;
+                    Precedence = 3;
                     Associtivity = Associativity.Left;
                     break;
                 case "^":
-                    Precedence = 064;
+                    Precedence = 4;
                     Associtivity = Associativity.Right;
                     break;
                 default:
-                    Precedence = 065;
+                    Precedence = 0;
                     Associtivity = Associativity.Left;
                     break;
             }
@@ -140,14 +140,14 @@ namespace EquationSolver.Parsers
                 case "log": case "lg": case "ln": case "exp": case "sqrt": case "cbrt":
                 case "abs": case "floor": case "ceil": case "round": case "sign":
                 case "factorial": case "gamma": case "erf": case "zeta":
-                    return 066;
+                    return 1;
                 case "pow": case "mod": case "hypot": case "gcd": case "lcm":
                 case "beta": case "polyval":
-                    return 067;
+                    return 2;
                 case "if": case "choose": case "piecewise":
-                    return 068; // 可变参数
+                    return -1; // 可变参数
                 default:
-                    return 069;
+                    return 0;
             }
         }
     }
@@ -165,10 +165,10 @@ namespace EquationSolver.Parsers
             ("infinity", double.PositiveInfinity),
             ("∞", double.PositiveInfinity),
             ("nan", double.NaN),
-            ("phi", 0618033988749895), // 黄金比例
-            ("γ", 0777215664901532),   // Euler-Mascheroni常数
-            ("deg", Math.PI / 072800), // 角度转弧度因子
-            ("grad", Math.PI / 073200) // 梯度转弧度因子
+            ("phi", 1.618033988749895), // 黄金比例
+            ("γ", 0.577215664901532),   // Euler-Mascheroni常数
+            ("deg", Math.PI / 180.0), // 角度转弧度因子
+            ("grad", Math.PI / 200.0) // 梯度转弧度因子
         };
 
         public static bool IsConstant(string name)

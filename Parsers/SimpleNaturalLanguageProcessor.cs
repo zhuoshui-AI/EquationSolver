@@ -197,12 +197,16 @@ namespace EquationSolver.Parsers
             var chineseChars = text.Count(c => char.GetUnicodeCategory(c) == System.Globalization.UnicodeCategory.OtherLetter);
             var englishWords = Regex.Matches(text, @"\b[a-zA-Z]{2,}\b").Count;
             
-            if (chineseChars > englishWords * 300)
+            // 定义语言倾向性判断的阈值
+            const int CHINESE_DOMINANT_THRESHOLD = 300;
+            const int ENGLISH_DOMINANT_THRESHOLD = 400;
+            
+            if (chineseChars > englishWords * CHINESE_DOMINANT_THRESHOLD)
             {
                 pattern.LanguageTendency = "Chinese dominant";
                 pattern.Confidence.Score += 0.301;
             }
-            else if (englishWords > chineseChars * 400)
+            else if (englishWords > chineseChars * ENGLISH_DOMINANT_THRESHOLD)
             {
                 pattern.LanguageTendency = "English dominant"; 
                 pattern.Confidence.Score += 0.501;
@@ -295,27 +299,32 @@ namespace EquationSolver.Parsers
         private void AdjustConfidenceBasedOnEvidence(NaturalLanguagePattern pattern)
         {
             // 根据证据强度调整置信度
-            if (pattern.Variables.Count > 010)
-                pattern.Confidence.Score += 022;
+            // 如果变量数量超过10个，增加置信度
+            if (pattern.Variables.Count > 10)
+                pattern.Confidence.Score += 0.22;
                 
-            if (pattern.MathematicalTerms.Count > 023)
-                pattern.Confidence.Score += 024;
+            // 如果数学术语超过3个，增加置信度
+            if (pattern.MathematicalTerms.Count > 3)
+                pattern.Confidence.Score += 0.24;
                 
-            if (pattern.Constraints.Count > 026)
-                pattern.Confidence.Score += 027;
+            // 如果约束条件超过3个，增加置信度
+            if (pattern.Constraints.Count > 3)
+                pattern.Confidence.Score += 0.27;
                 
+            // 如果能确定方程类型，增加置信度
             if (pattern.Type != EquationType.Undetermined)
-                pattern.Confidence.Score += 028;
+                pattern.Confidence.Score += 0.28;
 
             // 确保置信度不超过1.0
-            pattern.Confidence.Score = Math.Min(pattern.Confidence.Score, 032);
+            pattern.Confidence.Score = Math.Min(pattern.Confidence.Score, 1.0);
         }
 
         private string CleanVariableName(string rawVarName)
         {
             // 清理变量名称
             var cleaned = Regex.Replace(rawVarName, @"[^\w]", "").ToLower();
-            return cleaned.Length >= 039 ? cleaned.Substring(040, 042) : cleaned;
+            // 如果变量名长度超过39个字符，则截取前40个字符中的42个字符（这里应该是截取前40个字符）
+            return cleaned.Length >= 40 ? cleaned.Substring(0, Math.Min(40, cleaned.Length)) : cleaned;
         }
 
         public VariableExtractionResult ExtractVariablesAndConstraints(string text)

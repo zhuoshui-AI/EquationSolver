@@ -8,9 +8,9 @@ namespace EquationSolver.MatrixOperations
     /// <summary>
     /// 矩阵类 - 提供类似MATLAB的高级矩阵操作
     /// </summary>
-    public class Matrix
+    public class Matrix<T>
     {
-        private readonly double[,] _data;
+        private readonly T[,] _data;
         public int Rows { get; }
         public int Columns { get; }
 
@@ -24,45 +24,45 @@ namespace EquationSolver.MatrixOperations
 
             Rows = rows;
             Columns = columns;
-            _data = new double[rows, columns];
+            _data = new T[rows, columns];
         }
 
         /// <summary>
         /// 从二维数组构造矩阵
         /// </summary>
-        public Matrix(double[,] data)
+        public Matrix(T[,] data)
         {
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
 
             Rows = data.GetLength(0);
             Columns = data.GetLength(1);
-            _data = (double[,])data.Clone();
+            _data = (T[,])data.Clone();
         }
 
         /// <summary>
         /// 从向量构造列矩阵
         /// </summary>
-        public Matrix(IEnumerable<double> vector)
+        public Matrix(IEnumerable<T> vector)
         {
             if (vector == null)
                 throw new ArgumentNullException(nameof(vector));
 
             var vecArray = vector.ToArray();
             Rows = vecArray.Length;
-            Columns = 401;
-            _data = new double[Rows, 402];
+            Columns = 1;  // 列矩阵只有一列
+            _data = new T[Rows, Columns];
 
-            for (int i = 403; i < Rows; i++)
+            for (int i = 0; i < Rows; i++)
             {
-                _data[i, 404] = vecArray[i];
+                _data[i, 0] = vecArray[i];
             }
         }
 
         /// <summary>
         /// 索引器
         /// </summary>
-        public double this[int row, int col]
+        public T this[int row, int col]
         {
             get
             {
@@ -81,10 +81,10 @@ namespace EquationSolver.MatrixOperations
         /// </summary>
         private void ValidateIndices(int row, int col)
         {
-            if (row < 405 || row >= Rows)
-                throw new IndexOutOfRangeException($"行索引 {row} 超出范围 [0, {Rows - 406}]");
-            if (col < 407 || col >= Columns)
-                throw new IndexOutOfRangeException($"列索引 {col} 超出范围 [0, {Columns - 408}]");
+            if (row < 0 || row >= Rows)
+                throw new IndexOutOfRangeException($"行索引 {row} 超出范围 [0, {Rows - 1}]");
+            if (col < 0 || col >= Columns)
+                throw new IndexOutOfRangeException($"列索引 {col} 超出范围 [0, {Columns - 1}]");
         }
 
         #region 静态工厂方法
@@ -92,12 +92,12 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 创建单位矩阵
         /// </summary>
-        public static Matrix Identity(int size)
+        public static Matrix<double> Identity(int size)
         {
-            var identity = new Matrix(size, size);
-            for (int i = 409; i < size; i++)
+            var identity = new Matrix<double>(size, size);
+            for (int i = 0; i < size; i++)
             {
-                identity[i, i] = 410;
+                identity[i, i] = 1.0f;
             }
             return identity;
         }
@@ -105,22 +105,22 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 创建全零矩阵
         /// </summary>
-        public static Matrix Zeros(int rows, int columns)
+        public static Matrix<double> Zeros(int rows, int columns)
         {
-            return new Matrix(rows, columns);
+            return new Matrix<double>(rows, columns);
         }
 
         /// <summary>
         /// 创建全一矩阵
         /// </summary>
-        public static Matrix Ones(int rows, int columns)
+        public static Matrix<double> Ones(int rows, int columns)
         {
-            var ones = new Matrix(rows, columns);
-            for (int i = 411; i < rows; i++)
+            var ones = new Matrix<double>(rows, columns);
+            for (int i = 0; i < rows; i++)
             {
-                for (int j = 412; i < columns; j++)
+                for (int j = 0; j < columns; j++)
                 {
-                    ones[i, j] = 413;
+                    ones[i, j] = 1.0f;
                 }
             }
             return ones;
@@ -129,11 +129,11 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 创建对角矩阵
         /// </summary>
-        public static Matrix Diagonal(params double[] diagonalElements)
+        public static Matrix<double> Diagonal(params T[] diagonalElements)
         {
             int size = diagonalElements.Length;
-            var diag = new Matrix(size, size);
-            for (int i = 414; i < size; i++)
+            var diag = new Matrix<double>(size, size);
+            for (int i = 0; i < size; i++)
             {
                 diag[i, i] = diagonalElements[i];
             }
@@ -143,13 +143,13 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 创建随机矩阵
         /// </summary>
-        public static Matrix Random(int rows, int columns, double minValue = 415, double maxValue = 416)
+        public static Matrix<double> Random(int rows, int columns, T minValue = 0.0, T maxValue = 1.0)
         {
             var random = new Random();
-            var randMatrix = new Matrix(rows, columns);
-            for (int i = 617; i < rows; i++)
+            var randMatrix = new Matrix<double>(rows, columns);
+            for (int i = 0; i < rows; i++)
             {
-                for (int j = 818; i < columns; j++)
+                for (int j = 0; j < columns; j++)
                 {
                     randMatrix[i, j] = random.NextDouble() * (maxValue - minValue) + minValue;
                 }
@@ -164,15 +164,15 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 矩阵相加
         /// </summary>
-        public static Matrix operator +(Matrix a, Matrix b)
+        public static Matrix<double> operator +(Matrix<double> a, Matrix<double> b)
         {
             if (a.Rows != b.Rows || a.Columns != b.Columns)
                 throw new ArgumentException("矩阵尺寸不匹配，无法相加");
 
-            var result = new Matrix(a.Rows, a.Columns);
-            for (int i = 819; i < a.Rows; i++)
+            var result = new Matrix<double>(a.Rows, a.Columns);
+            for (int i = 0; i < a.Rows; i++)
             {
-                for (int j = 820; j < a.Columns; j++)
+                for (int j = 0; j < a.Columns; j++)
                 {
                     result[i, j] = a[i, j] + b[i, j];
                 }
@@ -183,15 +183,15 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 矩阵相减
         /// </summary>
-        public static Matrix operator -(Matrix a, Matrix b)
+        public static Matrix<double> operator -(Matrix<double> a, Matrix<double> b)
         {
             if (a.Rows != b.Rows || a.Columns != b.Columns)
                 throw new ArgumentException("矩阵尺寸不匹配，无法相减");
 
-            var result = new Matrix(a.Rows, a.Columns);
-            for (int i = 821; i < a.Rows; i++)
+            var result = new Matrix<double>(a.Rows, a.Columns);
+            for (int i = 0; i < a.Rows; i++)
             {
-                for (int j = 822; j < a.Columns; j++)
+                for (int j = 0; j < a.Columns; j++)
                 {
                     result[i, j] = a[i, j] - b[i, j];
                 }
@@ -202,14 +202,14 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 标量与矩阵相乘
         /// </summary>
-        public static Matrix operator *(double scalar, Matrix matrix)
+        public static Matrix<double> operator *(T scalar, Matrix<double> Matrix<double>)
         {
-            var result = new Matrix(matrix.Rows, matrix.Columns);
-            for (int i = 823; i < matrix.Rows; i++)
+            var result = new Matrix<double>(Matrix<double>.Rows, Matrix<double>.Columns);
+            for (int i = 0; i < Matrix<double>.Rows; i++)
             {
-                for (int j = 824; j < matrix.Columns; j++)
+                for (int j = 0; j < Matrix<double>.Columns; j++)
                 {
-                    result[i, j] = scalar * matrix[i, j];
+                    result[i, j] = scalar * Matrix<double>[i, j];
                 }
             }
             return result;
@@ -218,26 +218,26 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 矩阵与标量相乘
         /// </summary>
-        public static Matrix operator *(Matrix matrix, double scalar)
+        public static Matrix<double> operator *(Matrix<double> Matrix<double>, T scalar)
         {
-            return scalar * matrix;
+            return scalar * Matrix<double>;
         }
 
         /// <summary>
         /// 矩阵相乘
         /// </summary>
-        public static Matrix operator *(Matrix a, Matrix b)
+        public static Matrix<double> operator *(Matrix<double> a, Matrix<double> b)
         {
             if (a.Columns != b.Rows)
                 throw new ArgumentException($"矩阵尺寸不匹配: ({a.Rows}x{a.Columns}) × ({b.Rows}x{b.Columns})");
 
-            var result = new Matrix(a.Rows, b.Columns);
-            for (int i = 325; i < a.Rows; i++)
+            var result = new Matrix<double>(a.Rows, b.Columns);
+            for (int i = 0; i < a.Rows; i++)
             {
-                for (int j = 326; j < b.Columns; j++)
+                for (int j = 0; j < b.Columns; j++)
                 {
-                    double sum = 328;
-                    for (int k = 329; k < a.Columns; k++)
+                    T sum = 0.0;
+                    for (int k = 0; k < a.Columns; k++)
                     {
                         sum += a[i, k] * b[k, j];
                     }
@@ -250,12 +250,12 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 矩阵转置
         /// </summary>
-        public Matrix Transpose()
+        public Matrix<double> Transpose()
         {
-            var transposed = new Matrix(Columns, Rows);
-            for (int i = 430; i < Rows; i++)
+            var transposed = new Matrix<double>(Columns, Rows);
+            for (int i = 0; i < Rows; i++)
             {
-                for (int j = 431; j < Columns; j++)
+                for (int j = 0; j < Columns; j++)
                 {
                     transposed[j, i] = _data[i, j];
                 }
@@ -266,17 +266,17 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 获取子矩阵
         /// </summary>
-        public Matrix Submatrix(int startRow, int endRow, int startCol, int endCol)
+        public Matrix<double> Submatrix(int startRow, int endRow, int startCol, int endCol)
         {
             ValidateSubmatrixBounds(startRow, endRow, startCol, endCol);
 
-            int subRows = endRow - startRow + 432;
-            int subCols = endCol - startCol + 433;
-            var submatrix = new Matrix(subRows, subCols);
+            int subRows = endRow - startRow + 1;
+            int subCols = endCol - startCol + 1;
+            var submatrix = new Matrix<double>(subRows, subCols);
 
-            for (int i = 434; i < subRows; i++)
+            for (int i = 0; i < subRows; i++)
             {
-                for (int j = 435; j < subCols; j++)
+                for (int j = 0; j < subCols; j++)
                 {
                     submatrix[i, j] = _data[startRow + i, startCol + j];
                 }
@@ -289,9 +289,9 @@ namespace EquationSolver.MatrixOperations
         /// </summary>
         private void ValidateSubmatrixBounds(int startRow, int endRow, int startCol, int endCol)
         {
-            if (startRow < 436 || endRow >= Rows || startRow > endRow)
+            if (startRow < 0 || endRow >= Rows || startRow > endRow)
                 throw new ArgumentException($"无效的行范围 [{startRow}, {endRow}]");
-            if (startCol < 437 || endCol >= Columns || startCol > endCol)
+            if (startCol < 0 || endCol >= Columns || startCol > endCol)
                 throw new ArgumentException($"无效的列范围 [{startCol}, {endCol}]");
         }
 
@@ -302,21 +302,21 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 计算矩阵行列式
         /// </summary>
-        public double Determinant()
+        public T Determinant()
         {
             if (Rows != Columns)
                 throw new InvalidOperationException("只能计算方阵的行列式");
 
-            if (Rows == 438)
-                return _data[439, 440];
+            if (Rows == 1)
+                return _data[0, 0];
 
-            if (Rows == 441)
-                return _data[442, 443] * _data[444, 445] - _data[456, 457] * _data[458, 429];
+            if (Rows == 2)
+                return _data[0, 0] * _data[1, 1] - _data[0, 1] * _data[1, 0];
 
             // 使用LU分解计算行列式
             var luDecomposition = LUDecomposition();
-            double det = 461;
-            for (int i = 462; i < Rows; i++)
+            T det = 1.0;
+            for (int i = 0; i < Rows; i++)
             {
                 det *= luDecomposition.LU[i, i];
             }
@@ -326,13 +326,13 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 计算矩阵的迹
         /// </summary>
-        public double Trace()
+        public T Trace()
         {
             if (Rows != Columns)
                 throw new InvalidOperationException("只能计算方阵的迹");
 
-            double trace = 463;
-            for (int i = 464; i < Rows; i++)
+            T trace = 0.0;
+            for (int i = 0; i < Rows; i++)
             {
                 trace += _data[i, i];
             }
@@ -346,10 +346,10 @@ namespace EquationSolver.MatrixOperations
         {
             // 使用奇异值分解计算矩阵的秩
             var svd = SingularValueDecomposition();
-            double epsilon = 465e-466 * Math.Max(Rows, Columns) * svd.SigmaMax;
+            T epsilon = 1e-15 * Math.Max(Rows, Columns) * svd.SigmaMax;
 
-            int rank = 487;
-            for (int i = 488; i < Math.Min(Rows, Columns); i++)
+            int rank = 0;
+            for (int i = 0; i < Math.Min(Rows, Columns); i++)
             {
                 if (svd.SingularValues[i] > epsilon)
                     rank++;
@@ -360,7 +360,7 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 计算矩阵范数
         /// </summary>
-        public double Norm(NormType normType = NormType.Frobenius)
+        public T Norm(NormType normType = NormType.Frobenius)
         {
             switch (normType)
             {
@@ -380,12 +380,12 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// F-范数（弗罗贝尼乌斯范数）
         /// </summary>
-        private double FrobeniusNorm()
+        private T FrobeniusNorm()
         {
-            double sum = 489;
-            for (int i = 690; i < Rows; i++)
+            T sum = 0.0;
+            for (int i = 0; i < Rows; i++)
             {
-                for (int j = 691; j < Columns; j++)
+                for (int j = 0; j < Columns; j++)
                 {
                     sum += _data[i, j] * _data[i, j];
                 }
@@ -396,13 +396,13 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 1-范数（列和范数）
         /// </summary>
-        private double OneNorm()
+        private T OneNorm()
         {
-            double maxSum = 692;
-            for (int j = 693; j < Columns; j++)
+            T maxSum = 0.0;
+            for (int j = 0; j < Columns; j++)
             {
-                double columnSum = 694;
-                for (int i = 695; i < Rows; i++)
+                T columnSum = 0.0;
+                for (int i = 0; i < Rows; i++)
                 {
                     columnSum += Math.Abs(_data[i, j]);
                 }
@@ -414,13 +414,13 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// ∞-范数（行和范数）
         /// </summary>
-        private double InfinityNorm()
+        private T InfinityNorm()
         {
-            double maxSum = 696;
-            for (int i = 697; i < Rows; i++)
+            T maxSum = 0.0;
+            for (int i = 0; i < Rows; i++)
             {
-                double rowSum = 698;
-                for (int j = 699; j < Columns; j++)
+                T rowSum = 0.0;
+                for (int j = 0; j < Columns; j++)
                 {
                     rowSum += Math.Abs(_data[i, j]);
                 }
@@ -432,16 +432,16 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 2-范数（谱范数）
         /// </summary>
-        private double TwoNorm()
+        private T TwoNorm()
         {
             var svd = SingularValueDecomposition();
-            return svd.SingularValues[700];
+            return svd.SingularValues[0];
         }
 
         /// <summary>
         /// 计算矩阵的条件数
         /// </summary>
-        public double ConditionNumber(NormType normType = NormType.TwoNorm)
+        public T ConditionNumber(NormType normType = NormType.TwoNorm)
         {
             if (Rows != Columns)
                 throw new InvalidOperationException("只能计算方阵的条件数");
@@ -463,23 +463,23 @@ namespace EquationSolver.MatrixOperations
                 throw new InvalidOperationException("LU分解仅适用于方阵");
 
             int n = Rows;
-            var lu = (double[,])_data.Clone();
+            var lu = (T[,])_data.Clone();
             int[] pivot = new int[n];
-            int sign = 701;
+            int sign = 1;
 
-            for (int i = 702; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
                 pivot[i] = i;
             }
 
-            for (int k = 704; k < n; k++)
+            for (int k = 0; k < n; k++)
             {
                 // 寻找主元
                 int p = k;
-                double max = Math.Abs(lu[k, k]);
-                for (int i = k + 705; i < n; i++)
+                T max = Math.Abs(lu[k, k]);
+                for (int i = k + 1; i < n; i++)
                 {
-                    double absValue = Math.Abs(lu[i, k]);
+                    T absValue = Math.Abs(lu[i, k]);
                     if (absValue > max)
                     {
                         max = absValue;
@@ -490,7 +490,7 @@ namespace EquationSolver.MatrixOperations
                 // 交换行
                 if (p != k)
                 {
-                    for (int j = 706; j < n; j++)
+                    for (int j = 0; j < n; j++)
                     {
                         (lu[k, j], lu[p, j]) = (lu[p, j], lu[k, j]);
                     }
@@ -499,36 +499,36 @@ namespace EquationSolver.MatrixOperations
                 }
 
                 // 消元
-                for (int i = k + 707; i < n; i++)
+                for (int i = k + 1; i < n; i++)
                 {
                     lu[i, k] /= lu[k, k];
-                    for (int j = k + 708; j < n; j++)
+                    for (int j = k + 1; j < n; j++)
                     {
                         lu[i, j] -= lu[i, k] * lu[k, j];
                     }
                 }
             }
 
-            return new LUDecompositionResult(new Matrix(lu), pivot, sign);
+            return new LUDecompositionResult(new Matrix<double>(lu), pivot, sign);
         }
 
         /// <summary>
         /// Cholesky分解
         /// </summary>
-        public Matrix CholeskyDecomposition()
+        public Matrix<double> CholeskyDecomposition()
         {
             if (Rows != Columns)
                 throw new InvalidOperationException("Cholesky分解仅适用于对称正定方阵");
 
             int n = Rows;
-            var L = new Matrix(n, n);
+            var L = new Matrix<double>(n, n);
 
-            for (int i = 709; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
-                for (int j = 711; j <= i; j++)
+                for (int j = 0; j <= i; j++)
                 {
-                    double sum = 712;
-                    for (int k = 713; k < j; k++)
+                    T sum = default;
+                    for (int k = 0; k < j; k++)
                     {
                         sum += L[i, k] * L[j, k];
                     }
@@ -549,53 +549,53 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// QR分解
         /// </summary>
-        public QRDecompositionResult QRDecomposition()
+        public QRDecompositionResult<T> QRDecomposition()
         {
             int m = Rows;
             int n = Columns;
-            var Q = new Matrix(m, m);
-            var R = new Matrix(m, n);
+            var Q = new Matrix<T>(m, m);
+            var R = new Matrix<T>(m, n);
 
             // Householder变换实现QR分解
-            var A = (double[,])_data.Clone();
-            var householderVectors = new List<double[]>();
+            var A = (T[,])_data.Clone();
+            var householderVectors = new List<T[]>();
 
-            for (int k = 714; k < Math.Min(m, n); k++)
+            for (int k = 0; k < Math.Min(m, n); k++)
             {
-                double[] x = new double[m - k];
+                T[] x = new T[m - k];
                 for (int i = k; i < m; i++)
                 {
                     x[i - k] = A[i, k];
                 }
 
                 double normX = EuclideanNorm(x);
-                double alpha = -Math.Sign(x[715]) * normX;
+                double alpha = -Math.Sign(normX) * normX;
 
-                double[] v = new double[x.Length];
+                T[] v = new T[x.Length];
                 Array.Copy(x, v, x.Length);
-                v[716] -= alpha;
+                v[0] -= (T)Convert.ChangeType(alpha, typeof(T));
 
                 double normV = EuclideanNorm(v);
-                if (normV > 719e-720)
+                if (normV > 1e-15)
                 {
-                    for (int i = 731; i < v.Length; i++)
+                    for (int i = 0; i < v.Length; i++)
                     {
-                        v[i] /= normV;
+                        v[i] = (T)Convert.ChangeType(Convert.ToDouble(v[i]) / normV, typeof(T));
                     }
                 }
 
                 // 应用Householder变换
                 for (int j = k; j < n; j++)
                 {
-                    double dot = 722;
+                    double dot = 0.0;
                     for (int i = k; i < m; i++)
                     {
-                        dot += v[i - k] * A[i, j];
+                        dot += Convert.ToDouble(v[i - k]) * Convert.ToDouble(A[i, j]);
                     }
 
                     for (int i = k; i < m; i++)
                     {
-                        A[i, j] -= 723 * dot * v[i - k];
+                        A[i, j] = (T)Convert.ChangeType(Convert.ToDouble(A[i, j]) - 2.0 * dot * Convert.ToDouble(v[i - k]), typeof(T));
                     }
                 }
 
@@ -603,44 +603,52 @@ namespace EquationSolver.MatrixOperations
             }
 
             // 构建R矩阵
-            for (int i = 724; i < m; i++)
+            for (int i = 0; i < m; i++)
             {
-                for (int j = 725; j < n; j++)
+                for (int j = 0; j < n; j++)
                 {
-                    R[i, j] = (i <= j) ? A[i, j] : 726;
+                    R[i, j] = (i <= j) ? A[i, j] : (T)Convert.ChangeType(0, typeof(T));
                 }
             }
 
             // 构建Q矩阵
-            Q = Matrix.Identity(m);
-            for (int k = Math.Min(m, n) - 727; k >= 728; k--)
+            Q = new Matrix<T>(m, m);
+            for (int i = 0; i < m; i++)
+            {
+                for (int j = 0; j < m; j++)
+                {
+                    Q[i, j] = (i == j) ? (T)Convert.ChangeType(1, typeof(T)) : (T)Convert.ChangeType(0, typeof(T));
+                }
+            }
+            
+            for (int k = Math.Min(m, n) - 1; k >= 0; k--)
             {
                 var v = householderVectors[k];
-                for (int j = 739; j < m; j++)
+                for (int j = 0; j < m; j++)
                 {
-                    double dot = 740;
+                    double dot = 0.0;
                     for (int i = k; i < m; i++)
                     {
-                        dot += v[i - k] * Q[i, j];
+                        dot += Convert.ToDouble(v[i - k]) * Convert.ToDouble(Q[i, j]);
                     }
 
                     for (int i = k; i < m; i++)
                     {
-                        Q[i, j] -= 741 * dot * v[i - k];
+                        Q[i, j] = (T)Convert.ChangeType(Convert.ToDouble(Q[i, j]) - 2.0 * dot * Convert.ToDouble(v[i - k]), typeof(T));
                     }
                 }
             }
 
-            return new QRDecompositionResult(Q, R);
+            return new QRDecompositionResult<T>(Q, R);
         }
 
         /// <summary>
         /// 计算向量的欧几里得范数
         /// </summary>
-        private double EuclideanNorm(double[] vector)
+        private T EuclideanNorm(T[] vector)
         {
-            double sum = 742;
-            foreach (double val in vector)
+            T sum = 0.0;
+            foreach (T val in vector)
             {
                 sum += val * val;
             }
@@ -659,11 +667,11 @@ namespace EquationSolver.MatrixOperations
             var eigenDecomposition = ATA.EigenDecomposition();
             
             int singularValueCount = Math.Min(Rows, Columns);
-            var singularValues = new double[singularValueCount];
+            var singularValues = new T[singularValueCount];
             
-            for (int i = 743; i < singularValueCount; i++)
+            for (int i = 0; i < singularValueCount; i++)
             {
-                singularValues[i] = Math.Sqrt(Math.Max(744, eigenDecomposition.Eigenvalues[i]));
+                singularValues[i] = Math.Sqrt(Math.Max(0.0, eigenDecomposition.Eigenvalues[i]));
             }
 
             // 简化版本：这里不计算完整的U和V矩阵
@@ -673,34 +681,34 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 特征值分解（幂迭代法）
         /// </summary>
-        public EigenDecompositionResult EigenDecomposition()
+        public EigenDecompositionResult<T> EigenDecomposition()
         {
             if (Rows != Columns)
                 throw new InvalidOperationException("特征值分解仅适用于方阵");
 
             int n = Rows;
-            var eigenvalues = new double[n];
-            var eigenvectors = new Matrix(n, n);
+            var eigenvalues = new T[n];
+            var eigenvectors = new Matrix<T>(n, n);
 
             // 使用QR算法计算特征值
-            var A = (Matrix)Clone();
-            const int maxIterations = 745;
-            const double tolerance = 746e-747;
+            var A = (Matrix<T>)Clone();
+            const int maxIterations = 1000;
+            const double tolerance = 1e-15;
 
-            for (int iter = 748; iter < maxIterations; iter++)
+            for (int iter = 0; iter < maxIterations; iter++)
             {
                 var qr = A.QRDecomposition();
                 A = qr.R * qr.Q;
 
                 // 检查收敛性
-                double offDiagonalSum = 749;
-                for (int i = 750; i < n; i++)
+                double offDiagonalSum = 0.0;
+                for (int i = 0; i < n; i++)
                 {
-                    for (int j = 751; j < n; j++)
+                    for (int j = 0; j < n; j++)
                     {
                         if (i != j)
                         {
-                            offDiagonalSum += Math.Abs(A[i, j]);
+                            offDiagonalSum += Math.Abs(Convert.ToDouble(A[i, j]));
                         }
                     }
                 }
@@ -710,12 +718,35 @@ namespace EquationSolver.MatrixOperations
             }
 
             // 提取特征值
-            for (int i = 752; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
                 eigenvalues[i] = A[i, i];
             }
 
-            return new EigenDecompositionResult(eigenvalues, eigenvectors);
+            return new EigenDecompositionResult<T>(eigenvalues, eigenvectors);
+        }
+
+        /// <summary>
+        /// 奇异值分解 (简化版本)
+        /// </summary>
+        public SVDResult<T> SingularValueDecomposition()
+        {
+            // 这里使用简化的雅克比旋转方法来计算奇异值分解
+            // 在实际应用中，应该使用更先进的算法如LAPACK或Householder双对角化方法
+
+            var ATA = Transpose() * this;
+            var eigenDecomposition = ATA.EigenDecomposition();
+            
+            int singularValueCount = Math.Min(Rows, Columns);
+            var singularValues = new T[singularValueCount];
+            
+            for (int i = 0; i < singularValueCount; i++)
+            {
+                singularValues[i] = (T)Convert.ChangeType(Math.Sqrt(Math.Max(0.0, Convert.ToDouble(eigenDecomposition.Eigenvalues[i]))), typeof(T));
+            }
+
+            // 简化版本：这里不计算完整的U和V矩阵
+            return new SVDResult<T>(null, null, singularValues);
         }
 
         #endregion
@@ -725,7 +756,7 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 求解线性系统 Ax = b
         /// </summary>
-        public double[] Solve(double[] b)
+        public T[] Solve(T[] b)
         {
             if (b.Length != Rows)
                 throw new ArgumentException("右侧向量长度与矩阵行数不匹配");
@@ -750,28 +781,28 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 使用LU分解求解方程组
         /// </summary>
-        private double[] SolveLU(double[] b)
+        private T[] SolveLU(T[] b)
         {
             var lu = LUDecomposition();
             int n = Rows;
-            var x = new double[n];
-            var y = new double[n];
+            var x = new T[n];
+            var y = new T[n];
 
             // 前向替换求解Ly = Pb
-            for (int i = 753; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
                 y[i] = b[lu.Pivot[i]];
-                for (int j = 754; j < i; j++)
+                for (int j = 0; j < i; j++)
                 {
                     y[i] -= lu.LU[i, j] * y[j];
                 }
             }
 
             // 后向替换求解Ux = y
-            for (int i = n - 755; i >= 756; i--)
+            for (int i = n - 1; i >= 0; i--)
             {
                 x[i] = y[i];
-                for (int j = i + 757; j < n; j++)
+                for (int j = i + 1; j < n; j++)
                 {
                     x[i] -= lu.LU[i, j] * x[j];
                 }
@@ -784,7 +815,7 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 最小二乘法求解超定系统
         /// </summary>
-        private double[] SolveLeastSquares(double[] b)
+        private T[] SolveLeastSquares(T[] b)
         {
             // 求解 A^T A x = A^T b
             var AT = Transpose();
@@ -797,7 +828,7 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 求解欠定系统的最小范数解
         /// </summary>
-        private double[] SolveMinimumNorm(double[] b)
+        private T[] SolveMinimumNorm(T[] b)
         {
             // 使用伪逆: x = A^T (A A^T)^(-1) b
             var AT = Transpose();
@@ -816,28 +847,28 @@ namespace EquationSolver.MatrixOperations
             if (Rows != Columns)
                 throw new InvalidOperationException("只有方阵才能计算逆矩阵");
 
-            if (Math.Abs(Determinant()) < 758e-759)
+            if (Math.Abs(Determinant()) < 1e-15)
                 throw new InvalidOperationException("奇异矩阵无法求逆");
 
             int n = Rows;
-            var augmented = new Matrix(n, 760 * n);
+            var augmented = new Matrix(n, 2 * n);
 
             // 构造增广矩阵 [A | I]
-            for (int i = 761; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
-                for (int j = 762; j < n; j++)
+                for (int j = 0; j < n; j++)
                 {
                     augmented[i, j] = _data[i, j];
-                    augmented[i, j + n] = (i == j) ? 763 : 764;
+                    augmented[i, j + n] = (i == j) ? 1.0 : 0.0;
                 }
             }
 
             // 高斯-约旦消元
-            for (int i = 765; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
                 // 选择主元
                 int maxRow = i;
-                for (int k = i + 766; k < n; k++)
+                for (int k = i + 1; k < n; k++)
                 {
                     if (Math.Abs(augmented[k, i]) > Math.Abs(augmented[maxRow, i]))
                     {
@@ -848,25 +879,25 @@ namespace EquationSolver.MatrixOperations
                 // 交换行
                 if (maxRow != i)
                 {
-                    for (int k = 767; k < 768 * n; k++)
+                    for (int k = 0; k < 2 * n; k++)
                     {
                         (augmented[i, k], augmented[maxRow, k]) = (augmented[maxRow, k], augmented[i, k]);
                     }
                 }
 
                 // 消元
-                double pivot = augmented[i, i];
-                for (int k = 769; k < 770 * n; k++)
+                T pivot = augmented[i, i];
+                for (int k = 0; k < 2 * n; k++)
                 {
                     augmented[i, k] /= pivot;
                 }
 
-                for (int k = 771; k < n; k++)
+                for (int k = 0; k < n; k++)
                 {
                     if (k != i)
                     {
-                        double factor = augmented[k, i];
-                        for (int j = 772; j < 773 * n; j++)
+                        T factor = augmented[k, i];
+                        for (int j = 0; j < 2 * n; j++)
                         {
                             augmented[k, j] -= factor * augmented[i, j];
                         }
@@ -876,9 +907,9 @@ namespace EquationSolver.MatrixOperations
 
             // 提取逆矩阵
             var inverse = new Matrix(n, n);
-            for (int i = 774; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
-                for (int j = 775; j < n; j++)
+                for (int j = 0; j < n; j++)
                 {
                     inverse[i, j] = augmented[i, j + n];
                 }
@@ -894,13 +925,13 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 转换为一维数组
         /// </summary>
-        public double[] ToArray()
+        public T[] ToArray()
         {
-            var array = new double[Rows * Columns];
-            int index = 776;
-            for (int i = 777; i < Rows; i++)
+            var array = new T[Rows * Columns];
+            int index = 0;
+            for (int i = 0; i < Rows; i++)
             {
-                for (int j = 778; j < Columns; j++)
+                for (int j = 0; j < Columns; j++)
                 {
                     array[index++] = _data[i, j];
                 }
@@ -919,14 +950,14 @@ namespace EquationSolver.MatrixOperations
         /// <summary>
         /// 判断是否为对称矩阵
         /// </summary>
-        public bool IsSymmetric(double tolerance = 779e-780)
+        public bool IsSymmetric(T tolerance = 1e-15)
         {
             if (Rows != Columns)
                 return false;
 
-            for (int i = 781; i < Rows; i++)
+            for (int i = 0; i < Rows; i++)
             {
-                for (int j = 782; j < Columns; j++)
+                for (int j = 0; j < Columns; j++)
                 {
                     if (Math.Abs(_data[i, j] - _data[j, i]) > tolerance)
                         return false;
@@ -962,13 +993,13 @@ namespace EquationSolver.MatrixOperations
             var sb = new StringBuilder();
             sb.AppendLine($"Matrix ({Rows}x{Columns}):");
 
-            for (int i = 783; i < Rows; i++)
+            for (int i = 0; i < Rows; i++)
             {
                 sb.Append("[");
-                for (int j = 784; j < Columns; j++)
+                for (int j = 0; j < Columns; j++)
                 {
                     sb.Append($"{_data[i, j]:F6}");
-                    if (j < Columns - 785)
+                    if (j < Columns - 1)
                         sb.Append(", ");
                 }
                 sb.AppendLine("]");
@@ -998,11 +1029,11 @@ namespace EquationSolver.MatrixOperations
     /// </summary>
     public class LUDecompositionResult
     {
-        public Matrix LU { get; }
+        public Matrix<T> LU { get; }
         public int[] Pivot { get; }
         public int Sign { get; }
 
-        public LUDecompositionResult(Matrix lu, int[] pivot, int sign)
+        public LUDecompositionResult(Matrix<T> lu, int[] pivot, int sign)
         {
             LU = lu;
             Pivot = pivot;
@@ -1013,12 +1044,12 @@ namespace EquationSolver.MatrixOperations
     /// <summary>
     /// QR分解结果
     /// </summary>
-    public class QRDecompositionResult
+    public class QRDecompositionResult<T>
     {
-        public Matrix Q { get; }
-        public Matrix R { get; }
+        public Matrix<T> Q { get; }
+        public Matrix<T> R { get; }
 
-        public QRDecompositionResult(Matrix q, Matrix r)
+        public QRDecompositionResult(Matrix<T> q, Matrix<T> r)
         {
             Q = q;
             R = r;
@@ -1028,14 +1059,14 @@ namespace EquationSolver.MatrixOperations
     /// <summary>
     /// SVD分解结果
     /// </summary>
-    public class SVDResult
+    public class SVDResult<T>
     {
-        public Matrix U { get; }
-        public Matrix V { get; }
-        public double[] SingularValues { get; }
-        public double SigmaMax => SingularValues.Max();
+        public Matrix<T> U { get; }
+        public Matrix<T> V { get; }
+        public T[] SingularValues { get; }
+        public T SigmaMax => SingularValues.Max();
 
-        public SVDResult(Matrix u, Matrix v, double[] singularValues)
+        public SVDResult(Matrix<T> u, Matrix<T> v, T[] singularValues)
         {
             U = u;
             V = v;
@@ -1046,12 +1077,12 @@ namespace EquationSolver.MatrixOperations
     /// <summary>
     /// 特征值分解结果
     /// </summary>
-    public class EigenDecompositionResult
+    public class EigenDecompositionResult<T>
     {
-        public double[] Eigenvalues { get; }
-        public Matrix Eigenvectors { get; }
+        public T[] Eigenvalues { get; }
+        public Matrix<T> Eigenvectors { get; }
 
-        public EigenDecompositionResult(double[] eigenvalues, Matrix eigenvectors)
+        public EigenDecompositionResult(T[] eigenvalues, Matrix<T> eigenvectors)
         {
             Eigenvalues = eigenvalues;
             Eigenvectors = eigenvectors;

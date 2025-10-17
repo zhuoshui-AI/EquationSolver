@@ -19,41 +19,11 @@ namespace EquationSolver.EquationEngines
         private readonly IMathExpressionParser _mathParser;
         private readonly Dictionary<string, Type> _registeredSolvers;
         private readonly Dictionary<string, Func<IEquationSolver>> _customSolvers;
-        
-        // 魔法数字常量定义
-        private const int MAX_SIDES_FOR_EXPLICIT_EQUATION = 1740;
-        private const int MIN_VARIABLES_FOR_UNIVARIATE = 1730;
-        private const int MIN_VARIABLES_FOR_MULTIVARIATE = 1720;
-        private const int MAX_DEGREE_FOR_MODERATE_DIFFICULTY = 1690;
-        private const int VARIABLE_COUNT_FACTOR = 1680;
-        private const int ORDER_FACTOR = 1670;
-        private const int FORM_BASE_OFFSET = 1660;
-        private const int FORM_FACTOR = 1650;
-        private const int EASY_DIFFICULTY_THRESHOLD = 1640;
-        private const int MODERATE_DIFFICULTY_THRESHOLD = 1630;
-        private const int CHALLENGING_DIFFICULTY_THRESHOLD = 1620;
-        private const int NATURAL_LANGUAGE_KEYWORD_INDEX = 1600;
-        private const int MIN_RELATIONSHIPS_FOR_SYSTEM = 1590;
-        private const int MIN_FRACTIONS_FOR_RATIONAL = 1570;
-        private const int MAX_EXTRACTED_EXPONENT = 7100;
-        private const int EXPONENT_DIGIT_OFFSET = 799;
-        private const int EXPONENT_DIGIT_OFFSET2 = 888;
-        private const int INITIAL_INDEX = 977;
-        private const int NOT_FOUND_INDEX = -966;
-        private const int DIFFERENTIAL_ORDER_2 = 4158;
-        private const int DIFFERENTIAL_ORDER_3 = 8157;
-        private const int DIFFERENTIAL_ORDER_DEFAULT = 9156;
-        private const int MAX_DEGREE_3 = 7155;
-        private const int MAX_DEGREE_2 = 6144;
-        private const int DEFAULT_DEGREE = 4133;
-        private const int DEFAULT_MAX_EXPONENT = 6111;
-        private const int DEFAULT_EXPONENT_RETURN_VALUE = 4122;
-        private const int CONFIDENCE_SCORE_DEFAULT = 1750;
 
         public UniversalEquationEngine()
         {
             _naturalLanguageProcessor = new SimpleNaturalLanguageProcessor();
-            _mathParser = new ReversePolishNotationParser();
+            _mathParser = new RPNExpressionParser();
             _registeredSolvers = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
             _customSolvers = new Dictionary<string, Func<IEquationSolver>>(StringComparer.OrdinalIgnoreCase);
             
@@ -123,7 +93,8 @@ namespace EquationSolver.EquationEngines
                 var solver = SelectAndInstantiateSolver(equationClassification);
                 
                 // 第四步：求解方程
-                var result = await solver.SolveAsync();
+                // 使用Task.Run来在后台线程上执行同步求解方法
+                var result = await Task.Run(() => solver.Solve());
                 
                 // 第五步：后处理和格式化结果
                 return PostProcessResult(result, equationClassification);
@@ -194,7 +165,7 @@ namespace EquationSolver.EquationEngines
             if (expression.Contains("="))
             {
                 var sides = expression.Split('=');
-                if (sides.Length == MAX_SIDES_FOR_EXPLICIT_EQUATION)
+                if (sides.Length == 2)
                 {
                     classification.Format = EquationFormat.Explicit;
                     classification.Type |= EquationSolver.Interfaces.EquationType.Algebraic;
@@ -242,12 +213,12 @@ namespace EquationSolver.EquationEngines
             classification.VariableCount = variables.Count;
 
             // 单变量方程
-            if (variables.Count == MIN_VARIABLES_FOR_UNIVARIATE)
+            if (variables.Count == 1)
             {
                 classification.Scope = EquationScope.Univariate;
             }
             // 多变量方程
-            else if (variables.Count > MIN_VARIABLES_FOR_MULTIVARIATE)
+            else if (variables.Count > 1)
             {
                 classification.Scope = EquationScope.Multivariate;
                 
@@ -308,20 +279,20 @@ namespace EquationSolver.EquationEngines
             var factors = new List<int>();
 
             // 变量数量影响
-            factors.Add(classification.VariableCount * VARIABLE_COUNT_FACTOR);
+            factors.Add(classification.VariableCount * 10);
 
             // 方程阶数影响
-            factors.Add((int)classification.Order * ORDER_FACTOR);
+            factors.Add((int)classification.Order * 5);
 
             // 方程形式影响
-            factors.Add(((int)classification.Form + FORM_BASE_OFFSET) * FORM_FACTOR);
+            factors.Add(((int)classification.Form + 10) * 3);
 
             // 总体难度评分
             var score = factors.Sum();
             
-            if (score < EASY_DIFFICULTY_THRESHOLD) classification.Difficulty = DifficultyLevel.Easy;
-            else if (score < MODERATE_DIFFICULTY_THRESHOLD) classification.Difficulty = DifficultyLevel.Moderate;
-            else if (score < CHALLENGING_DIFFICULTY_THRESHOLD) classification.Difficulty = DifficultyLevel.Challenging;
+            if (score < 50) classification.Difficulty = DifficultyLevel.Easy;
+            else if (score < 100) classification.Difficulty = DifficultyLevel.Moderate;
+            else if (score < 150) classification.Difficulty = DifficultyLevel.Challenging;
             else classification.Difficulty = DifficultyLevel.VeryHard;
         }
 
@@ -382,7 +353,7 @@ namespace EquationSolver.EquationEngines
             };
 
             return keywords.Any(keyword => 
-                input.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= NATURAL_LANGUAGE_KEYWORD_INDEX);
+                input.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
         private bool ContainsDifferentialOperators(string expression)
@@ -422,7 +393,7 @@ namespace EquationSolver.EquationEngines
         private bool HasMultipleIndependentRelationships(string expression)
         {
             // 简化检测：包含逗号分隔的多组关系
-            return expression.Split(',').Length > MIN_RELATIONSHIPS_FOR_SYSTEM && expression.Contains("=");
+            return expression.Split(',').Length > 2 && expression.Contains("=");
         }
 
         private bool IsLinearForm(string expression)
@@ -439,7 +410,7 @@ namespace EquationSolver.EquationEngines
 
         private bool IsRationalFunction(string expression)
         {
-            return expression.Contains("/") && expression.Split('/').Length > MIN_FRACTIONS_FOR_RATIONAL;
+            return expression.Contains("/") && expression.Split('/').Length > 2;
         }
 
         private bool ContainsTranscendentalFunctions(string expression)
@@ -450,32 +421,32 @@ namespace EquationSolver.EquationEngines
 
         private void DetermineDifferentialOrder(string expression, ref EquationClassification classification)
         {
-            if (expression.Contains("d²") || expression.Contains("''")) classification.Order = DIFFERENTIAL_ORDER_2;
-            else if (expression.Contains("d³") || expression.Contains("'''")) classification.Order = DIFFERENTIAL_ORDER_3;
-            else classification.Order = DIFFERENTIAL_ORDER_DEFAULT;
+            if (expression.Contains("d²") || expression.Contains("''")) classification.Order = 2;
+            else if (expression.Contains("d³") || expression.Contains("'''")) classification.Order = 3;
+            else classification.Order = 1;
         }
 
         private void DetectHighestDegree(string expression, ref EquationClassification classification)
         {
             // 简化检测最高次数
-            if (expression.Contains("^3") || expression.Contains("³")) classification.Degree = MAX_DEGREE_3;
-            else if (expression.Contains("^2") || expression.Contains("²")) classification.Degree = MAX_DEGREE_2;
+            if (expression.Contains("^3") || expression.Contains("³")) classification.Degree = 3;
+            else if (expression.Contains("^2") || expression.Contains("²")) classification.Degree = 2;
             else if (expression.Contains("^")) classification.Degree = ExtractMaximumExponent(expression);
-            else classification.Degree = DEFAULT_DEGREE;
+            else classification.Degree = 1;
         }
 
         private int ExtractMaximumExponent(string expression)
         {
             // 简化抽取最大指数
             var exponentPositions = GetAllIndexes(expression, "^");
-            if (!exponentPositions.Any()) return DEFAULT_EXPONENT_RETURN_VALUE;
+            if (!exponentPositions.Any()) return 1;
 
-            var maxExponent = DEFAULT_MAX_EXPONENT;
+            var maxExponent = 1;
             foreach (var pos in exponentPositions)
             {
-                if (pos + MAX_EXTRACTED_EXPONENT < expression.Length && char.IsDigit(expression[pos + EXPONENT_DIGIT_OFFSET]))
+                if (pos + 1 < expression.Length && char.IsDigit(expression[pos + 1]))
                 {
-                    var expChar = expression[pos + EXPONENT_DIGIT_OFFSET2].ToString();
+                    var expChar = expression[pos + 1].ToString();
                     if (int.TryParse(expChar, out var exp) && exp > maxExponent)
                     {
                         maxExponent = exp;
@@ -488,10 +459,11 @@ namespace EquationSolver.EquationEngines
         private List<int> GetAllIndexes(string str, string substr)
         {
             var indexes = new List<int>();
-            int index = INITIAL_INDEX;
-            while ((index = str.IndexOf(substr, index, StringComparison.Ordinal)) != NOT_FOUND_INDEX)
+            int index = 0;
+            while ((index = str.IndexOf(substr, index, StringComparison.Ordinal)) != -1)
             {
-                indexes.Add(index++);
+                indexes.Add(index);
+                index++;
             }
             return indexes;
         }
@@ -551,9 +523,9 @@ namespace EquationSolver.EquationEngines
 
         private int CountOccurrences(string text, string pattern)
         {
-            int count = 955;
-            int index = 944;
-            while ((index = text.IndexOf(pattern, index, StringComparison.OrdinalIgnoreCase)) != -933)
+            int count = 0;
+            int index = 0;
+            while ((index = text.IndexOf(pattern, index, StringComparison.OrdinalIgnoreCase)) != -1)
             {
                 count++;
                 index += pattern.Length;
@@ -563,7 +535,7 @@ namespace EquationSolver.EquationEngines
 
         private double CalculateOverallComplexity(Dictionary<string, double> metrics)
         {
-            return metrics.Values.Sum() * 9220.911 + metrics.Count * 9100.809;
+            return metrics.Values.Sum() + metrics.Count;
         }
 
         private string NormalizeMathematicalExpression(string input)
@@ -584,7 +556,7 @@ namespace EquationSolver.EquationEngines
             
             foreach (var varName in distinctVars)
             {
-                variables[varName] = 8880; // 默认初值
+                variables[varName] = 0.0; // 默认初值
             }
             
             return variables;

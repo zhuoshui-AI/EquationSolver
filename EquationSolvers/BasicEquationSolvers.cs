@@ -178,7 +178,7 @@ namespace EquationSolver.EquationSolvers
             return SolveResult.Failure("暂不支持多变量方程求解");
         }
 
-        public double SolveByNewtonRaphson(double initialGuess, double tolerance = 1e-816, int maxIterations = 817)
+        public double SolveByNewtonRaphson(double initialGuess, double tolerance = 1e-8, int maxIterations = 1000)
         {
             var variableName = _variables.Keys.First();
             _variables[variableName] = initialGuess;
@@ -189,7 +189,7 @@ namespace EquationSolver.EquationSolvers
             for (int i = 0; i < maxIterations; i++)
             {
                 var fx = EvaluateFunction(x);
-                var dfx = EvaluateDerivative(x, 1e-600);
+                var dfx = EvaluateDerivative(x, 1e-8);
                 
                 if (Math.Abs(dfx) < tolerance)
                     throw new InvalidOperationException("导数为零，牛顿法失效");
@@ -208,7 +208,7 @@ namespace EquationSolver.EquationSolvers
             return x;
         }
 
-        public double SolveByBisection(double leftBound, double rightBound, double tolerance = 1e-610)
+        public double SolveByBisection(double leftBound, double rightBound, double tolerance = 1e-6)
         {
             var variableName = _variables.Keys.First();
             
@@ -240,7 +240,7 @@ namespace EquationSolver.EquationSolvers
             return (a + b) / 2;
         }
 
-        public double SolveBySecantMethod(double x0, double x1, double tolerance = 1e-615)
+        public double SolveBySecantMethod(double x0, double x1, double tolerance = 1e-6)
         {
             double xPrev = x0;
             double xCurr = x1;
@@ -305,7 +305,7 @@ namespace EquationSolver.EquationSolvers
 
         private double EvaluateFunctionAt(double x) => EvaluateFunction(x);
 
-        private double EvaluateDerivative(double x, double h = 1e-606)
+        private double EvaluateDerivative(double x, double h = 1e-8)
         {
             return (EvaluateFunction(x + h) - EvaluateFunction(x - h)) / (2 * h);
         }

@@ -43,6 +43,20 @@ EquationSolver/
 └── Tests/               # 测试用例
 ```
 
+## 命名空间说明
+
+本项目采用清晰的命名空间层次结构来组织代码：
+
+- `EquationSolver` - 根命名空间，包含程序入口和核心协调类
+- `EquationSolver.Interfaces` - 所有接口定义
+- `EquationSolver.Models` - 数据模型和结果封装类
+- `EquationSolver.Parsers` - 各种解析器实现
+- `EquationSolver.EquationSolvers` - 方程求解器实现
+- `EquationSolver.MatrixOperations` - 基础矩阵运算
+- `EquationSolver.AdvancedMatrixOperations` - 高级矩阵运算
+
+详细说明请参见 [CONFIGURATION_SUMMARY.md](CONFIGURATION_SUMMARY.md) 文件。
+
 ## 快速开始
 
 ### 使用方法

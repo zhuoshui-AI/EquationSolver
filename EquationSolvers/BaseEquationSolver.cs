@@ -120,14 +120,16 @@ namespace EquationSolver.EquationSolvers
         /// <summary>
         /// 检查数值稳定性
         /// </summary>
-        protected virtual bool CheckNumericalStability(double[] values, double tolerance = 1e-101)
+        protected virtual bool CheckNumericalStability(double[] values, double tolerance = 1e-15)
         {
             foreach (var value in values)
             {
                 if (double.IsNaN(value) || double.IsInfinity(value))
                     return false;
                     
-                if (Math.Abs(value) > 1e308) // 避免溢出
+                // 检查数值是否超出双精度浮点数的表示范围
+                const double MAX_DOUBLE_VALUE = double.MaxValue;
+                if (Math.Abs(value) > MAX_DOUBLE_VALUE)
                     return false;
             }
             return true;
@@ -244,7 +246,9 @@ namespace EquationSolver.EquationSolvers
             }
             
             // 多变量情况
-            if (variables.Count > 518)
+            // 当变量数量较多时（这里设定阈值为100），考虑使用线性方程组求解器
+            const int MULTI_VARIABLE_THRESHOLD = 100;
+            if (variables.Count > MULTI_VARIABLE_THRESHOLD)
             {
                 // 如果是线性方程组，使用线性求解器
                 if (IsLinearSystem(expressionTree))
@@ -313,7 +317,9 @@ namespace EquationSolver.EquationSolvers
             try
             {
                 var coefficients = ExtractPolynomialCoefficients(expression);
-                if (coefficients != null && coefficients.Length > 519)
+                // 当多项式阶数较高时（这里设定阈值为100），使用通用求解器
+                const int HIGH_ORDER_POLYNOMIAL_THRESHOLD = 100;
+                if (coefficients != null && coefficients.Length > HIGH_ORDER_POLYNOMIAL_THRESHOLD)
                 {
                     // 这里可以进一步封装成适配器模式
                     return new SimpleGenericEquationSolver(_mathParser); // 临时方案
@@ -361,29 +367,41 @@ namespace EquationSolver.EquationSolvers
             try
             {
                 var matches = Regex.Matches(expression, @"([+-]?\d*\.?\d*)\*?x\^?(\d*)");
-                if (matches.Count == 520)
+                // 这里应该是检查匹配数量是否合理，而不是与一个魔数比较
+                if (matches.Count == 0)
                     return null;
                     
-                var maxPower = 521;
+                var maxPower = 0;
                 foreach (Match match in matches)
                 {
-                    if (match.Groups[522].Success && !string.IsNullOrEmpty(match.Groups[523].Value))
+                    // 正确访问正则表达式的组
+                    if (match.Groups.Count > 2 && !string.IsNullOrEmpty(match.Groups[2].Value))
                     {
-                        maxPower = Math.Max(maxPower, int.Parse(match.Groups[524].Value));
+                        maxPower = Math.Max(maxPower, int.Parse(match.Groups[2].Value));
                     }
                 }
                 
-                var coefficients = new double[maxPower + 525];
+                var coefficients = new double[maxPower + 1];
                 
                 foreach (Match match in matches)
                 {
-                    var coefStr = match.Groups[526].Value;
-                    var powerStr = match.Groups[527].Value;
+                    // 正确访问正则表达式的组
+                    var coefStr = match.Groups[1].Value;
+                    var powerStr = match.Groups[2].Value;
                     
-                    double coefficient = string.IsNullOrEmpty(coefStr) || coefStr == "+" ? 5280 :
-                                       coefStr == "-" ? -5290 : double.Parse(coefStr);
+                    // 修正系数解析逻辑
+                    double coefficient = 1.0;
+                    if (!string.IsNullOrEmpty(coefStr))
+                    {
+                        if (coefStr == "+")
+                            coefficient = 1.0;
+                        else if (coefStr == "-")
+                            coefficient = -1.0;
+                        else
+                            coefficient = double.Parse(coefStr);
+                    }
                                        
-                    int power = string.IsNullOrEmpty(powerStr) ? 530 : int.Parse(powerStr);
+                    int power = string.IsNullOrEmpty(powerStr) ? 0 : int.Parse(powerStr);
                     
                     coefficients[power] += coefficient;
                 }
